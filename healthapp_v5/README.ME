@@ -1,0 +1,80 @@
+# 🩺 Health Pulse
+
+A personal health records and analytics web application built with Flask and Python.
+Users can log, track, and visualize key health metrics — Blood Pressure, Diabetes, 
+Thyroid, and BMI — with OCR-based lab report uploads, AI health insights, 
+medication reminders, and PDF report export.
+
+## ✨ Features
+
+- **Multi-metric Tracking** — Log Blood Pressure, Blood Sugar, Thyroid, and BMI with automatic risk classification
+- **Lab Report OCR** — Upload PDF/image lab reports; values are extracted automatically using pytesseract
+- **Interactive Charts** — Trend visualization using Chart.js across all health parameters
+- **AI Health Insights** — Optional Gemini AI integration for personalized health summaries
+- **PDF Export** — Download a formatted health report with all your records
+- **Medication Reminders** — Set browser-notified reminders with daily/weekly repeat
+- **Admin Panel** — Manage users, post app announcements, and view platform stats
+- **Secure Auth** — Registration, login, and session management with hashed passwords
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Backend | Python 3.x, Flask |
+| Database | SQLite + Flask-SQLAlchemy |
+| Auth | Flask-Login, Werkzeug |
+| Frontend | Bootstrap 5, Bootstrap Icons, Chart.js |
+| OCR | pytesseract, pdfplumber, Pillow |
+| PDF Export | fpdf2 |
+| AI (Optional) | Google Gemini API |
+
+## 🚀 Getting Started
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/health-pulse.git
+cd health-pulse
+
+# 2. Create a virtual environment
+python -m venv venv
+venv\Scripts\activate        # Windows
+# source venv/bin/activate   # Mac/Linux
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Set up environment variables
+cp .env.example .env
+# Edit .env and add your SECRET_KEY (and optional GEMINI_API_KEY)
+
+# 5. Run the app
+python app.py
+```
+
+Visit `http://localhost:5000` — the first user to register becomes admin automatically.
+
+## Project Structure
+health-pulse/
+├── app.py               # Main Flask application & all routes
+├── models.py            # SQLAlchemy database models
+├── seed.py              # Sample data seeder
+├── requirements.txt
+├── .env.example
+├── utils/
+│   ├── risk_engine.py   # Health metric classification logic
+│   ├── extractor.py     # OCR extraction from lab reports
+│   ├── ai_insights.py   # AI integration
+│   └── pdf_report.py    # PDF generation
+├── templates/           # Jinja2 HTML templates
+└── static/              # CSS, JS, uploaded reports
+## 📸 Screenshots
+
+##  Environment Variables
+
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | Flask session secret key |
+| `GEMINI_API_KEY` | Optional — enables AI Insights feature |
+
+## License
+This project was built as a BCA capstone project. Feel free to use it for learning purposes.

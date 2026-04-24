@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Upload Lab Report — Health Pulse{% endblock %}
+{% block page_title %}Upload Lab Report{% endblock %}
+{% block extra_css %}
+<style>
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
+.step{background:#fff;border:1px solid var(--border2);border-radius:var(--r);padding:20px;text-align:center;position:relative;box-shadow:var(--sh);transition:box-shadow .2s}
+.step:hover{box-shadow:var(--sh-md)}
+.step::after{content:'→';position:absolute;right:-12px;top:50%;transform:translateY(-50%);color:var(--text4);font-size:1.1rem;font-weight:700;z-index:1}
+.step:last-child::after{display:none}
+.step-num{width:38px;height:38px;background:linear-gradient(135deg,var(--blue),var(--sky));color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.95rem;margin:0 auto 11px;box-shadow:0 3px 10px rgba(46,68,147,.3)}
+.step-title{font-weight:700;font-size:.84rem;color:var(--text);margin-bottom:4px}
+.step-desc{font-size:.72rem;color:var(--text3);line-height:1.4}
+.dzone{border:2.5px dashed var(--sky);border-radius:16px;padding:52px 28px;text-align:center;background:var(--sky-lt);cursor:pointer;transition:all .22s;position:relative}
+.dzone:hover,.dzone.over{background:var(--sky-md);border-color:var(--blue);transform:scale(1.01)}
+.dzone input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.dzone-ic{font-size:3.2rem;margin-bottom:12px;display:block;color:var(--sky)}
+.dzone-t{font-size:1.05rem;font-weight:800;color:var(--blue);margin-bottom:6px}
+.dzone-s{font-size:.82rem;color:var(--text3)}
+.fprev{display:none;background:#fff;border:1.5px solid var(--ok);border-radius:12px;padding:13px 16px;margin-top:14px;align-items:center;gap:12px;box-shadow:0 3px 10px rgba(22,163,74,.12)}
+.fprev.show{display:flex}
+.cap-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.cap-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--sky-lt);border-radius:10px;border:1px solid var(--border2)}
+.cap-item .ci-ic{width:34px;height:34px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex-shrink:0;border:1px solid var(--border2)}
+.cap-item .ci-label{font-size:.8rem;font-weight:700;color:var(--text)}
+.cap-item .ci-vals{font-size:.68rem;color:var(--text3)}
+.cap-item .ci-auto{font-size:.62rem;background:var(--ok-lt);color:#15803d;border-radius:6px;padding:1px 6px;font-weight:800;margin-top:2px;display:inline-block;border:1px solid #bbf7d0}
+.overlay{display:none;position:fixed;inset:0;background:rgba(19,26,47,.8);z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff;gap:22px;backdrop-filter:blur(8px)}
+.overlay.show{display:flex}
+.spin{width:56px;height:56px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--sky);border-radius:50%;animation:sp .85s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- Step indicators -->
+<div class="steps">
+  <div class="step"><div class="step-num">1</div><div class="step-title">Upload File</div><div class="step-desc">PDF or image of any lab report</div></div>
+  <div class="step"><div class="step-num">2</div><div class="step-title">Values Extracted</div><div class="step-desc">All test values read automatically</div></div>
+  <div class="step"><div class="step-num">3</div><div class="step-title">Auto-Saved</div><div class="step-desc">Numbers go to the correct health module</div></div>
+  <div class="step"><div class="step-num">4</div><div class="step-title">Vault Storage</div><div class="step-desc">Original filed by year, month &amp; type</div></div>
+</div>
+
+<div class="g2" style="align-items:start">
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-cloud-arrow-up-fill" style="color:var(--sky)"></i> Select Report File</h3></div>
+    <div class="card-bd">
+      <form method="POST" enctype="multipart/form-data" id="upForm">
+        <div class="dzone" id="dz">
+          <input type="file" name="report_file" id="fi" accept=".pdf,.png,.jpg,.jpeg,.webp" onchange="preview(this)">
+          <span class="dzone-ic"><i class="bi bi-file-earmark-medical-fill"></i></span>
+          <div class="dzone-t">Drag &amp; drop your report here</div>
+          <div class="dzone-s">or click to browse &nbsp;&middot;&nbsp; PDF, PNG, JPG &nbsp;&middot;&nbsp; Max 25 MB</div>
+        </div>
+        <div class="fprev" id="fp">
+          <span id="fic" style="font-size:2rem">📄</span>
+          <div style="flex:1">
+            <div id="fn" style="font-weight:700;font-size:.9rem;color:var(--text)"></div>
+            <div id="fs" style="font-size:.74rem;color:var(--text3)"></div>
+          </div>
+          <button type="button" onclick="clearF()" style="background:var(--danger-lt);border:1px solid rgba(220,38,38,.2);border-radius:8px;padding:5px 11px;cursor:pointer;font-size:.75rem;color:var(--danger);font-weight:700">Remove</button>
+        </div>
+
+        <button type="submit" class="btn btn-p" id="subBtn" style="width:100%;justify-content:center;padding:14px;font-size:.95rem;margin-top:18px" onclick="go()">
+          <i class="bi bi-cloud-arrow-up-fill"></i>Upload &amp; Extract Values
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- What gets extracted -->
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="card">
+      <div class="card-hd"><h3><i class="bi bi-check-all" style="color:var(--ok)"></i> What Gets Extracted</h3></div>
+      <div class="card-bd" style="padding:16px 20px">
+        <div class="cap-list">
+          {% for ic,lbl,vals,auto in [
+            ('🔬','Thyroid Profile','TSH, T3, T4',True),
+            ('❤️','Blood Pressure','Systolic, Diastolic, Pulse',True),
+            ('🩸','Diabetes','Fasting, Post-meal, HbA1c',True),
+            ('⚖️','BMI / Weight','Height, Weight, BMI',False),
+            ('🫀','Lipid Profile','Cholesterol, LDL, HDL, TG',False),
+            ('🔴','CBC','Hb, WBC, Platelets, RBC',False),
+            ('🟤','Liver Function','SGPT, SGOT, Bilirubin',False),
+            ('💧','Kidney Function','Creatinine, Urea, eGFR',False)] %}
+          <div class="cap-item">
+            <div class="ci-ic">{{ ic }}</div>
+            <div>
+              <div class="ci-label">{{ lbl }}</div>
+              <div class="ci-vals">{{ vals }}</div>
+              {% if auto %}<span class="ci-auto">✓ Auto-Save</span>{% endif %}
+            </div>
+          </div>{% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-bd" style="background:linear-gradient(135deg,var(--sky-lt),#f0f7fc);border-radius:var(--r)">
+        <h4 style="color:var(--blue);font-size:.88rem;margin-bottom:10px"><i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i> Tips for Best Results</h4>
+        <ul style="font-size:.8rem;color:var(--text2);line-height:2.2;list-style:none;padding:0">
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:6px"></i>Upload the original PDF from Vijaya, Apollo, Thyrocare, etc.</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:6px"></i>A clear, well-lit photo of the report also works.</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:6px"></i>Multiple tests in one report? All values are extracted.</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:6px"></i>Report date is auto-detected and saved.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="ov">
+  <div class="spin"></div>
+  <div style="font-size:1.2rem;font-weight:800">Reading your lab report…</div>
+  <div style="font-size:.88rem;opacity:.75">Extracting all values — this usually takes 10–20 seconds</div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const icons={'pdf':'📄','png':'🖼️','jpg':'🖼️','jpeg':'🖼️','webp':'🖼️'};
+function preview(inp){
+  const f=inp.files[0]; if(!f) return;
+  const ext=f.name.split('.').pop().toLowerCase();
+  document.getElementById('fic').textContent=icons[ext]||'📄';
+  document.getElementById('fn').textContent=f.name;
+  document.getElementById('fs').textContent=(f.size/1024/1024).toFixed(2)+' MB';
+  document.getElementById('fp').classList.add('show');
+}
+function clearF(){ document.getElementById('fi').value=''; document.getElementById('fp').classList.remove('show'); }
+function go(){ if(!document.getElementById('fi').files[0]) return; setTimeout(()=>document.getElementById('ov').classList.add('show'),100); }
+const dz=document.getElementById('dz');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('over')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('over'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('over');const fi=document.getElementById('fi');fi.files=e.dataTransfer.files;preview(fi)});
+</script>
+{% endblock %}

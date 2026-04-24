@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}Health Pulse{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+/* ══════════════════════════════════════════════
+   HEALTH PULSE — DESIGN TOKENS
+   Palette: Medical Blues (#131a2f · #2e4493 · #11a2d7 · #e5f3fa)
+   ══════════════════════════════════════════════ */
+:root {
+  /* Brand palette */
+  --navy:        #131a2f;
+  --blue:        #2e4493;
+  --sky:         #11a2d7;
+  --sky-lt:      #e5f3fa;
+  --sky-md:      #b8dff2;
+
+  /* Semantic */
+  --ok:          #16a34a;
+  --ok-lt:       #dcfce7;
+  --warn:        #d97706;
+  --warn-lt:     #fef3c7;
+  --danger:      #dc2626;
+  --danger-lt:   #fee2e2;
+  --purple:      #7c3aed;
+  --purple-lt:   #ede9fe;
+
+  /* Neutrals */
+  --text:        #0f172a;
+  --text2:       #334155;
+  --text3:       #64748b;
+  --text4:       #94a3b8;
+  --bg:          #f0f7fc;
+  --bg2:         #e5f3fa;
+  --white:       #ffffff;
+  --card:        #ffffff;
+  --border:      #c8dff0;
+  --border2:     #dbeaf6;
+
+  /* Sidebar */
+  --sb-bg:       #131a2f;
+  --sb-active:   #2e4493;
+  --sb-hover:    rgba(255,255,255,0.07);
+  --sb-text:     rgba(255,255,255,0.65);
+  --sb-text-act: #ffffff;
+
+  /* Layout */
+  --sw:   260px;
+  --r:    14px;
+  --r-sm: 10px;
+  --sh:   0 1px 4px rgba(46,68,147,0.08), 0 4px 16px rgba(46,68,147,0.06);
+  --sh-md:0 4px 16px rgba(46,68,147,0.12), 0 12px 40px rgba(46,68,147,0.08);
+  --sh-lg:0 8px 32px rgba(46,68,147,0.16);
+}
+
+/* ── RESET ─────────────────────────────────── */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:'Plus Jakarta Sans', 'Inter', sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  font-size:15px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── SIDEBAR ───────────────────────────────── */
+.sidebar {
+  position:fixed; top:0; left:0;
+  width:var(--sw); height:100vh;
+  background:var(--sb-bg);
+  display:flex; flex-direction:column;
+  z-index:300; overflow-y:auto; overflow-x:hidden;
+  box-shadow:4px 0 24px rgba(19,26,47,0.18);
+}
+
+.sb-logo {
+  padding:24px 20px 18px;
+  display:flex; align-items:center; gap:13px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.sb-logo-mark {
+  width:44px; height:44px; flex-shrink:0;
+  background:linear-gradient(135deg, #11a2d7, #2e4493);
+  border-radius:13px;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 4px 14px rgba(17,162,215,0.4);
+}
+.sb-logo-mark svg { width:24px; height:24px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; }
+.sb-logo h2 { font-size:1rem; font-weight:800; color:#fff; letter-spacing:-.02em; line-height:1.2; }
+.sb-logo small { font-size:.66rem; color:rgba(255,255,255,0.38); display:block; margin-top:2px; letter-spacing:.02em; }
+
+.sb-user {
+  margin:14px 12px 6px;
+  background:rgba(255,255,255,0.06);
+  border-radius:var(--r-sm); padding:12px 14px;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.sb-user .un { font-weight:700; font-size:.88rem; color:#fff; }
+.sb-user .ue { font-size:.7rem; color:rgba(255,255,255,0.38); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+.sb-sec {
+  padding:18px 20px 7px;
+  font-size:.65rem; font-weight:700;
+  letter-spacing:.1em; text-transform:uppercase;
+  color:rgba(255,255,255,0.3);
+}
+.sb-link {
+  display:flex; align-items:center; gap:11px;
+  padding:9px 14px; margin:1px 8px;
+  color:var(--sb-text);
+  text-decoration:none;
+  font-size:.88rem; font-weight:500;
+  border-radius:var(--r-sm);
+  transition:all .18s ease;
+  position:relative;
+}
+.sb-link .ic {
+  width:34px; height:34px; flex-shrink:0;
+  border-radius:9px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.05rem;
+  transition:all .18s;
+  color:rgba(255,255,255,0.5);
+}
+.sb-link:hover { color:#fff; background:var(--sb-hover); }
+.sb-link:hover .ic { color:#fff; background:rgba(255,255,255,0.1); }
+.sb-link.on { color:#fff; background:var(--sb-active); font-weight:700; border-radius:var(--r-sm); }
+.sb-link.on .ic { background:rgba(255,255,255,0.18); color:#fff; }
+.sb-link.on::after {
+  content:''; position:absolute; right:0; top:50%;
+  transform:translateY(-50%);
+  width:3px; height:22px;
+  background:var(--sky); border-radius:2px 0 0 2px;
+}
+
+.upload-special {
+  margin:10px 8px !important;
+  background:linear-gradient(135deg, #11a2d7, #2e4493) !important;
+  color:#fff !important;
+  box-shadow:0 4px 16px rgba(17,162,215,0.35) !important;
+  padding:10px 14px !important; font-weight:700 !important;
+}
+.upload-special .ic { background:rgba(255,255,255,0.2) !important; color:#fff !important; }
+.upload-special:hover { opacity:.93; transform:translateY(-1px); box-shadow:0 6px 22px rgba(17,162,215,0.5) !important; }
+.upload-special.on { background:linear-gradient(135deg,#0e8cb8,#233670) !important; }
+.upload-special::after { display:none !important; }
+
+.admin-link .ic { color:rgba(255,255,255,0.5) !important; }
+.admin-link.on { background:rgba(124,58,237,0.25) !important; }
+.admin-link.on .ic { background:rgba(124,58,237,0.3) !important; color:#c4b5fd !important; }
+.admin-link.on::after { background:var(--purple) !important; }
+
+.sb-footer { margin-top:auto; padding:14px 8px; border-top:1px solid rgba(255,255,255,0.08); }
+.logout {
+  display:flex; align-items:center; gap:11px;
+  padding:9px 14px; border-radius:var(--r-sm);
+  color:rgba(255,255,255,0.45); text-decoration:none;
+  font-size:.86rem; font-weight:500; transition:all .15s;
+}
+.logout .ic { width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:1.05rem; }
+.logout:hover { color:var(--danger); background:rgba(220,38,38,0.1); }
+.logout:hover .ic { background:rgba(220,38,38,0.12); }
+
+/* ── MAIN ──────────────────────────────────── */
+.main { margin-left:var(--sw); min-height:100vh; }
+
+.topbar {
+  background:var(--white);
+  border-bottom:1px solid var(--border2);
+  padding:14px 30px;
+  display:flex; justify-content:space-between; align-items:center;
+  position:sticky; top:0; z-index:100;
+  box-shadow:0 1px 8px rgba(46,68,147,0.07);
+}
+.topbar h1 { font-size:1.15rem; font-weight:800; color:var(--text); letter-spacing:-.02em; }
+.topbar-right { display:flex; align-items:center; gap:14px; }
+.topbar-meta { font-size:.78rem; color:var(--text3); font-weight:500; }
+
+.tb-pill {
+  display:flex; align-items:center; gap:6px;
+  background:var(--sky-lt); color:var(--blue);
+  border-radius:20px; padding:5px 13px;
+  font-size:.72rem; font-weight:700;
+  border:1px solid var(--sky-md);
+}
+.notif-btn {
+  width:36px; height:36px;
+  background:var(--sky-lt); border:1px solid var(--sky-md);
+  border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.05rem; position:relative;
+  transition:all .15s; color:var(--blue);
+}
+.notif-btn:hover { background:var(--sky-md); }
+.notif-dot { position:absolute; top:6px; right:6px; width:8px; height:8px; background:var(--danger); border-radius:50%; border:2px solid #fff; display:none; }
+.notif-dot.show { display:block; }
+
+.content { padding:26px 30px; }
+
+/* ── CARDS ─────────────────────────────────── */
+.card {
+  background:var(--card);
+  border-radius:var(--r);
+  border:1px solid var(--border2);
+  box-shadow:var(--sh);
+  overflow:hidden;
+  transition:box-shadow .2s, border-color .2s;
+}
+.card:hover { border-color:var(--border); box-shadow:var(--sh-md); }
+.card-hd {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 22px;
+  border-bottom:1px solid var(--border2);
+  background:linear-gradient(135deg, #fafcff, var(--white));
+}
+.card-hd h3 {
+  font-size:.96rem; font-weight:700; color:var(--text);
+  display:flex; align-items:center; gap:9px;
+}
+.card-bd { padding:20px 22px; }
+
+/* ── STAT CARDS ────────────────────────────── */
+.stat {
+  background:var(--card);
+  border-radius:var(--r);
+  border:1px solid var(--border2);
+  padding:20px;
+  position:relative; overflow:hidden;
+  transition:all .2s; box-shadow:var(--sh);
+}
+.stat:hover { transform:translateY(-2px); box-shadow:var(--sh-md); }
+.stat-accent { position:absolute; top:0; left:0; right:0; height:3px; border-radius:var(--r) var(--r) 0 0; }
+.ic-box, .ic-wrap {
+  width:48px; height:48px;
+  border-radius:12px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.25rem; margin-bottom:14px;
+}
+.stat .lbl { font-size:.76rem; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; margin-bottom:5px; }
+.stat .val { font-size:1.85rem; font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--text); }
+.stat .sub { font-size:.76rem; color:var(--text3); margin-top:6px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+
+/* ── GRIDS ─────────────────────────────────── */
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:18px; }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+
+/* ── BUTTONS ───────────────────────────────── */
+.btn {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px; border-radius:10px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.85rem; font-weight:700;
+  cursor:pointer; text-decoration:none;
+  border:none; transition:all .18s; white-space:nowrap;
+  letter-spacing:-.01em;
+}
+.btn-p { background:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(46,68,147,0.3); }
+.btn-p:hover { background:#253a7e; box-shadow:0 6px 20px rgba(46,68,147,0.45); transform:translateY(-1px); }
+.btn-a { background:var(--sky); color:#fff; box-shadow:0 4px 14px rgba(17,162,215,0.28); }
+.btn-a:hover { background:#0e8cb8; transform:translateY(-1px); }
+.btn-o { background:var(--white); color:var(--text2); border:1.5px solid var(--border); }
+.btn-o:hover { background:var(--sky-lt); border-color:var(--sky); color:var(--blue); }
+.btn-d { background:var(--danger-lt); color:var(--danger); border:1.5px solid rgba(220,38,38,0.2); }
+.btn-d:hover { background:#fecaca; }
+.btn-teal { background:var(--ok); color:#fff; box-shadow:0 4px 14px rgba(22,163,74,0.25); }
+.btn-teal:hover { background:#15803d; transform:translateY(-1px); }
+.btn-purple { background:var(--purple); color:#fff; }
+.btn-purple:hover { background:#6d28d9; transform:translateY(-1px); }
+.btn-sm { padding:6px 13px; font-size:.78rem; border-radius:8px; }
+
+/* ── FORMS ─────────────────────────────────── */
+.fg { margin-bottom:16px; }
+.fg label {
+  display:block; font-size:.78rem; font-weight:700;
+  color:var(--text2); margin-bottom:7px;
+  text-transform:uppercase; letter-spacing:.05em;
+}
+.fc {
+  width:100%; padding:11px 14px;
+  background:#fff; border:1.5px solid var(--border);
+  border-radius:10px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:.9rem; color:var(--text);
+  outline:none; transition:all .18s;
+}
+.fc:focus { border-color:var(--sky); box-shadow:0 0 0 3px rgba(17,162,215,0.12); }
+.fc::placeholder { color:var(--text4); }
+.fc option { background:#fff; color:var(--text); }
+.fh { font-size:.74rem; color:var(--text3); margin-top:5px; line-height:1.5; }
+
+/* ── TABLES ────────────────────────────────── */
+.tbl { width:100%; border-collapse:collapse; }
+.tbl th {
+  text-align:left; padding:11px 16px;
+  font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em;
+  color:var(--text3); border-bottom:2px solid var(--border2);
+  background:#f8fafd;
+}
+.tbl td {
+  padding:12px 16px; border-bottom:1px solid var(--border2);
+  font-size:.88rem; color:var(--text2); vertical-align:middle;
+}
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tbody tr { transition:background .12s; }
+.tbl tbody tr:hover td { background:var(--sky-lt); }
+
+/* ── RISK BADGES ───────────────────────────── */
+.rb {
+  display:inline-block; padding:4px 11px;
+  border-radius:20px; font-size:.69rem; font-weight:800;
+  text-transform:uppercase; letter-spacing:.06em;
+}
+.rb-low, .rb-normal    { background:var(--ok-lt);     color:#15803d; border:1px solid #bbf7d0; }
+.rb-medium, .rb-moderate, .rb-elevated { background:var(--warn-lt); color:#b45309; border:1px solid #fde68a; }
+.rb-high, .rb-critical, .rb-stage1, .rb-stage2 { background:var(--danger-lt); color:#b91c1c; border:1px solid #fecaca; }
+.rb-unknown { background:#f1f5f9; color:var(--text3); border:1px solid #e2e8f0; }
+
+.src-chip, .chip-type { display:inline-block; padding:3px 9px; border-radius:8px; font-size:.67rem; font-weight:700; }
+.src-manual { background:#f1f5f9; color:var(--text3); border:1px solid #e2e8f0; }
+.src-report { background:var(--sky-lt); color:var(--sky); border:1px solid var(--sky-md); }
+
+/* ── FLASH MESSAGES ────────────────────────── */
+.flashes { padding:0 30px; margin-top:14px; }
+.fl {
+  padding:12px 16px; border-radius:10px; margin-bottom:10px;
+  font-size:.87rem; font-weight:600;
+  display:flex; align-items:center; gap:10px;
+}
+.fl-success { background:var(--ok-lt); color:#15803d; border:1px solid #bbf7d0; }
+.fl-error, .fl-danger { background:var(--danger-lt); color:#b91c1c; border:1px solid #fecaca; }
+.fl-info, .fl-warning { background:var(--warn-lt); color:#b45309; border:1px solid #fde68a; }
+
+/* ── REFERENCE CHIPS ───────────────────────── */
+.rc {
+  background:var(--sky-lt); border:1px solid var(--sky-md);
+  border-radius:8px; padding:3px 10px; font-size:.72rem;
+  color:var(--blue); margin-left:5px; font-weight:600;
+}
+
+/* ── NOTIFICATION POPUP ────────────────────── */
+#notif-popup {
+  position:fixed; bottom:24px; right:24px;
+  width:340px; z-index:9999;
+  display:flex; flex-direction:column; gap:10px;
+  pointer-events:none;
+}
+#notif-popup .nc { pointer-events:all; }
+.nc {
+  background:#fff;
+  border:1px solid var(--border);
+  border-left:4px solid var(--warn);
+  border-radius:14px; padding:16px 18px;
+  box-shadow:var(--sh-lg);
+  animation:slideIn .35s cubic-bezier(.16,1,.3,1);
+}
+@keyframes slideIn { from { transform:translateX(60px); opacity:0; } to { transform:translateX(0); opacity:1; } }
+.nc-title { font-weight:800; font-size:.92rem; color:var(--text); margin-bottom:3px; }
+.nc-sub { font-size:.77rem; color:var(--text3); }
+.nc-close { float:right; background:none; border:none; cursor:pointer; color:var(--text4); font-size:.9rem; margin-left:8px; }
+.nc-close:hover { color:var(--text); }
+
+/* ── CHART WRAPPER ─────────────────────────── */
+.chart-wrap { position:relative; width:100%; }
+
+/* ── SCROLLBAR ─────────────────────────────── */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--sky-md); border-radius:3px; }
+
+/* ── INTERACTIVE HOVER ANIMATIONS ─────────── */
+.stat, .card { transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
+.stat:hover { transform:translateY(-3px); }
+
+/* ── RESPONSIVE ────────────────────────────── */
+@media(max-width:1200px) { .g4 { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:900px)  { .g3 { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:768px)  { .sidebar { display:none; } .main { margin-left:0; } .g4 { grid-template-columns:repeat(2,1fr); } }
+@media(max-width:540px)  { .g2,.g3,.g4 { grid-template-columns:1fr; } .content { padding:14px; } }
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<aside class="sidebar">
+  <div class="sb-logo">
+    <div class="sb-logo-mark">
+      <!-- Pulse / heartbeat SVG logo -->
+      <svg viewBox="0 0 24 24" stroke-width="2.2" stroke="#fff" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12h3l3-8 4 16 3-8h5"/>
+      </svg>
+    </div>
+    <div>
+      <h2>Health Pulse</h2>
+      <small>Smart Health Manager</small>
+    </div>
+  </div>
+
+  <div class="sb-user">
+    <div class="un">{{ current_user.name }}</div>
+    <div class="ue">{{ current_user.email }}</div>
+  </div>
+
+  <nav>
+    <div class="sb-sec">Overview</div>
+    <a href="{{ url_for('dashboard') }}" class="sb-link {% if request.endpoint=='dashboard' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-grid-1x2-fill"></i></span>Dashboard
+    </a>
+    <a href="{{ url_for('reports') }}" class="sb-link {% if request.endpoint=='reports' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-clipboard2-pulse-fill"></i></span>All Reports
+    </a>
+    <a href="{{ url_for('insights') }}" class="sb-link {% if request.endpoint=='insights' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-lightbulb-fill"></i></span>AI Insights
+    </a>
+
+    <div class="sb-sec">Lab Reports</div>
+    <a href="{{ url_for('upload') }}" class="sb-link upload-special {% if request.endpoint=='upload' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-cloud-arrow-up-fill"></i></span>Upload Report
+    </a>
+    <a href="{{ url_for('vault') }}" class="sb-link {% if request.endpoint in ['vault','report_detail'] %}on{% endif %}">
+      <span class="ic"><i class="bi bi-folder2-open"></i></span>Report Vault
+    </a>
+    <a href="{{ url_for('doctor_view') }}" class="sb-link {% if request.endpoint=='doctor_view' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-person-badge-fill"></i></span>Doctor View
+    </a>
+
+    <div class="sb-sec">Health Modules</div>
+    <a href="{{ url_for('blood_pressure') }}" class="sb-link {% if request.endpoint=='blood_pressure' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-heart-fill"></i></span>Blood Pressure
+    </a>
+    <a href="{{ url_for('diabetes') }}" class="sb-link {% if request.endpoint=='diabetes' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-droplet-fill"></i></span>Diabetes
+    </a>
+    <a href="{{ url_for('thyroid') }}" class="sb-link {% if request.endpoint=='thyroid' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-activity"></i></span>Thyroid
+    </a>
+    <a href="{{ url_for('bmi') }}" class="sb-link {% if request.endpoint=='bmi' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-person-standing"></i></span>BMI &amp; Obesity
+    </a>
+
+    <div class="sb-sec">Tools</div>
+    <a href="{{ url_for('reminders') }}" class="sb-link {% if request.endpoint=='reminders' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-bell-fill"></i></span>Reminders
+      {% if due_reminders %}
+      <span style="background:var(--danger);color:#fff;border-radius:20px;padding:1px 7px;font-size:.62rem;font-weight:800;margin-left:auto">{{ due_reminders|length }}</span>
+      {% endif %}
+    </a>
+    {% if current_user.is_admin %}
+    <a href="{{ url_for('admin') }}" class="sb-link admin-link {% if request.endpoint=='admin' %}on{% endif %}">
+      <span class="ic"><i class="bi bi-shield-fill-check"></i></span>Admin Panel
+    </a>
+    {% endif %}
+  </nav>
+
+  <div class="sb-footer">
+    <a href="{{ url_for('logout') }}" class="logout">
+      <span class="ic"><i class="bi bi-box-arrow-left"></i></span>Sign Out
+    </a>
+  </div>
+</aside>
+
+<!-- Notification popup — fixed bottom-right -->
+<div id="notif-popup"></div>
+{% endif %}
+
+<main class="main">
+  {% if current_user.is_authenticated %}
+  <div class="topbar">
+    <h1>{% block page_title %}{% endblock %}</h1>
+    <div class="topbar-right">
+      {% if latest_update %}
+      <div class="tb-pill"><i class="bi bi-stars"></i> {{ latest_update.title[:30] }}</div>
+      {% endif %}
+      <button class="notif-btn" id="notifBtn" title="Reminders">
+        <i class="bi bi-bell-fill"></i>
+        <div class="notif-dot {% if due_reminders %}show{% endif %}" id="notif-dot"></div>
+      </button>
+      <div class="topbar-meta">{{ now.strftime('%d %B %Y') }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+  {% if messages %}
+  <div class="flashes">
+    {% for c,m in messages %}
+    <div class="fl fl-{{ c }}">
+      <i class="bi bi-{% if c=='success' %}check-circle-fill{% elif c=='error' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %}"></i>
+      {{ m }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <div class="content">{% block content %}{% endblock %}</div>
+</main>
+
+<!-- Chart.js — loaded after body so canvas elements already exist -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+if (typeof Chart !== 'undefined') {
+  Chart.defaults.color           = '#64748b';
+  Chart.defaults.font.family     = "'Plus Jakarta Sans', 'Inter', sans-serif";
+  Chart.defaults.font.size       = 12;
+  Chart.defaults.borderColor     = '#dbeaf6';
+  Chart.defaults.plugins.legend.labels.boxWidth  = 10;
+  Chart.defaults.plugins.legend.labels.padding   = 14;
+  Chart.defaults.plugins.legend.labels.font      = { size:12 };
+  Chart.defaults.plugins.tooltip.backgroundColor = '#131a2f';
+  Chart.defaults.plugins.tooltip.titleColor      = '#fff';
+  Chart.defaults.plugins.tooltip.bodyColor       = '#94a3b8';
+  Chart.defaults.plugins.tooltip.borderColor     = '#2e4493';
+  Chart.defaults.plugins.tooltip.borderWidth     = 1;
+  Chart.defaults.plugins.tooltip.cornerRadius    = 10;
+  Chart.defaults.plugins.tooltip.padding         = 12;
+  Chart.defaults.scale.grid.color                = '#e5f3fa';
+  Chart.defaults.scale.ticks.color               = '#64748b';
+}
+</script>
+
+{% block scripts %}{% endblock %}
+
+{% if current_user.is_authenticated %}
+<script>
+const NKEY = 'hp_notif_v1';
+let shown = JSON.parse(localStorage.getItem(NKEY) || '[]');
+let notifGranted = Notification.permission === 'granted';
+
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[523, 0], [659, 0.22], [784, 0.44]].forEach(([f, t]) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = f; o.type = 'sine';
+      g.gain.setValueAtTime(0, ctx.currentTime + t);
+      g.gain.linearRampToValueAtTime(0.28, ctx.currentTime + t + 0.05);
+      g.gain.linearRampToValueAtTime(0, ctx.currentTime + t + 0.4);
+      o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.45);
+    });
+  } catch(e) {}
+}
+
+function showNotif(r) {
+  const popup = document.getElementById('notif-popup');
+  const icons = { medication:'💊', test:'🔬', appointment:'🏥', exercise:'🏃', other:'🔔' };
+  const div = document.createElement('div');
+  div.className = 'nc';
+  div.innerHTML = `
+    <button class="nc-close" onclick="this.closest('.nc').remove()">✕</button>
+    <div class="nc-title">${icons[r.type]||'🔔'} ${r.title}</div>
+    <div class="nc-sub">Due now · ${r.type}</div>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <a href="/reminders" style="font-size:.78rem;background:#2e4493;color:#fff;border-radius:8px;padding:6px 14px;text-decoration:none;font-weight:700">View Reminder →</a>
+      <button onclick="this.closest('.nc').remove()" style="font-size:.78rem;background:#f1f5f9;border:1px solid #e2e8f0;color:#64748b;border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600">Dismiss</button>
+    </div>`;
+  popup.appendChild(div);
+  beep();
+  document.getElementById('notif-dot').classList.add('show');
+  if (notifGranted) {
+    try { new Notification('Health Pulse Reminder 🔔', { body: r.title }); } catch(e) {}
+  }
+  setTimeout(() => { if (div.parentNode) div.remove(); }, 18000);
+}
+
+document.getElementById('notifBtn').addEventListener('click', async () => {
+  if ('Notification' in window && Notification.permission === 'default') {
+    const p = await Notification.requestPermission();
+    notifGranted = p === 'granted';
+  }
+});
+
+async function checkDue() {
+  try {
+    const res = await fetch('/api/due-reminders');
+    if (!res.ok) return;
+    const rems = await res.json();
+    rems.forEach(r => {
+      if (!shown.includes(r.id)) {
+        shown.push(r.id);
+        localStorage.setItem(NKEY, JSON.stringify(shown));
+        showNotif(r);
+      }
+    });
+  } catch(e) {}
+}
+
+checkDue();
+setInterval(checkDue, 30000);
+</script>
+{% endif %}
+</body>
+</html>

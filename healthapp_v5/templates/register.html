@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Create Account — Health Pulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(145deg,#e5f3fa,#f0f7fc,#dbeaf6)}
+.box{background:#fff;border-radius:22px;width:520px;max-width:100%;padding:48px 46px;box-shadow:0 20px 70px rgba(46,68,147,.12);border:1px solid #dbeaf6}
+.brand{text-align:center;margin-bottom:30px}
+.lm{width:56px;height:56px;background:linear-gradient(135deg,#2e4493,#11a2d7);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 6px 18px rgba(46,68,147,.3)}
+.lm svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.brand h2{font-size:1.45rem;font-weight:800;color:#131a2f;letter-spacing:-.02em}
+.brand p{font-size:.82rem;color:#64748b;margin-top:3px}
+.admin-note{background:#e5f3fa;border:1px solid #b8dff2;border-radius:10px;padding:11px 14px;font-size:.78rem;color:#2e4493;margin-bottom:22px;display:flex;align-items:center;gap:9px}
+.gr{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg{margin-bottom:15px}
+label{display:block;font-size:.76rem;font-weight:700;color:#475569;margin-bottom:7px;text-transform:uppercase;letter-spacing:.05em}
+.inp-wrap{position:relative}.inp-wrap i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:.95rem}
+input,select{width:100%;padding:11px 12px 11px 40px;border:1.5px solid #dbeaf6;border-radius:10px;font-family:'Plus Jakarta Sans';font-size:.9rem;color:#131a2f;outline:none;transition:all .18s;background:#fafcff}
+input:focus,select:focus{border-color:#11a2d7;box-shadow:0 0 0 3px rgba(17,162,215,.12);background:#fff}
+input::placeholder{color:#94a3b8}
+select{padding-left:12px}
+.btn{width:100%;padding:13px;background:linear-gradient(135deg,#2e4493,#11a2d7);color:#fff;border:none;border-radius:11px;font-family:'Plus Jakarta Sans';font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 18px rgba(46,68,147,.3);display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:all .2s}
+.btn:hover{box-shadow:0 6px 26px rgba(46,68,147,.45);transform:translateY(-1px)}
+.link-row{text-align:center;margin-top:18px;font-size:.83rem;color:#94a3b8}.link-row a{color:#2e4493;font-weight:700;text-decoration:none}.link-row a:hover{color:#11a2d7}
+.fl{padding:11px 13px;border-radius:9px;margin-bottom:16px;font-size:.82rem;font-weight:600;display:flex;align-items:center;gap:8px}
+.fl-error{background:#fee2e2;color:#b91c1c;border:1px solid #fecaca}
+</style>
+</head>
+<body>
+<div class="box">
+  <div class="brand">
+    <div class="lm"><svg viewBox="0 0 24 24"><path d="M3 12h3l3-8 4 16 3-8h5"/></svg></div>
+    <h2>Create Your Account</h2>
+    <p>Start managing your health for free</p>
+  </div>
+  <div class="admin-note"><i class="bi bi-star-fill"></i> The <strong>first person to register</strong> automatically becomes the Admin.</div>
+  {% with messages = get_flashed_messages(with_categories=True) %}{% for c,m in messages %}<div class="fl fl-{{ c }}"><i class="bi bi-exclamation-circle-fill"></i>{{ m }}</div>{% endfor %}{% endwith %}
+  <form method="POST">
+    <div class="fg"><label>Full Name</label><div class="inp-wrap"><i class="bi bi-person-fill"></i><input type="text" name="name" placeholder="Your full name" required></div></div>
+    <div class="fg"><label>Email Address</label><div class="inp-wrap"><i class="bi bi-envelope-fill"></i><input type="email" name="email" placeholder="you@example.com" required></div></div>
+    <div class="gr">
+      <div class="fg"><label>Age</label><div class="inp-wrap"><i class="bi bi-calendar3"></i><input type="number" name="age" placeholder="25" min="1" max="120"></div></div>
+      <div class="fg"><label>Gender</label><select name="gender"><option value="">Select gender</option><option>Female</option><option>Male</option><option>Other</option></select></div>
+    </div>
+    <div class="fg"><label>Password</label><div class="inp-wrap"><i class="bi bi-shield-lock-fill"></i><input type="password" name="password" placeholder="Minimum 6 characters" required minlength="6"></div></div>
+    <button class="btn" type="submit"><i class="bi bi-check-circle-fill"></i>Create My Account</button>
+  </form>
+  <div class="link-row">Already have an account? <a href="{{ url_for('login') }}">Sign in</a></div>
+</div>
+</body>
+</html>

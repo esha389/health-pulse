@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}AI Health Insights — HealthPulse{% endblock %}
+{% block page_title %}AI Health Insights{% endblock %}
+{% block content %}
+<div class="g2" style="align-items:start;margin-bottom:20px">
+
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-lightning-charge-fill" style="color:var(--sky)"></i>Generate Health Analysis</h3>
+    </div>
+    <div class="card-bd">
+      <div style="background:var(--blue-lt,#eff6ff);border-radius:12px;padding:16px 18px;margin-bottom:20px;border-left:4px solid var(--sky,#11a2d7)">
+        <div style="font-size:.95rem;font-weight:800;color:var(--navy,#131a2f);margin-bottom:6px">
+          <i class="bi bi-cpu-fill" style="color:var(--sky,#11a2d7)"></i> Powered by Smart AI
+        </div>
+        <div style="font-size:.88rem;color:var(--text2,#3d5a7a);line-height:1.65">
+          This feature analyses your latest readings across all health modules — Blood Pressure, Diabetes, Thyroid, and BMI — and provides personalised health recommendations.
+        </div>
+      </div>
+      <form method="POST">
+        <button type="submit" class="btn btn-p" style="width:100%;justify-content:center;padding:14px;font-size:.95rem">
+          <i class="bi bi-stars"></i>Generate Health Insights
+        </button>
+      </form>
+      <div style="margin-top:14px;padding:10px 14px;background:#fffbeb;border-radius:9px;font-size:.82rem;color:#92400e;font-weight:600;border:1px solid #fde68a">
+        <i class="bi bi-shield-exclamation"></i> For informational purposes only. Always consult a qualified medical professional.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-bar-chart-fill" style="color:var(--royal,#2e4493)"></i>What Gets Analysed</h3>
+    </div>
+    <div style="overflow:hidden">
+      {% for ic, col, lbl, sub in [
+        ('bi-heart-pulse-fill','#ef4444','Blood Pressure','Latest systolic and diastolic reading with risk level'),
+        ('bi-droplet-fill','#f59e0b','Diabetes','Fasting glucose and HbA1c values'),
+        ('bi-activity','#7c3aed','Thyroid','TSH, T3, and T4 hormone levels'),
+        ('bi-person-fill','#10b981','BMI','Body weight category and score'),
+        ('bi-person-badge','#3b82f6','Your Profile','Age and gender for personalised context'),
+      ] %}
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid rgba(0,0,0,.05)">
+        <div style="width:38px;height:38px;background:{{ col }}18;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="bi {{ ic }}" style="color:{{ col }};font-size:1.1rem"></i>
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:.9rem">{{ lbl }}</div>
+          <div style="font-size:.78rem;color:#64748b;margin-top:2px">{{ sub }}</div>
+        </div>
+      </div>{% endfor %}
+      <div style="padding:12px 20px;font-size:.78rem;color:#64748b;display:flex;align-items:center;gap:8px">
+        <i class="bi bi-info-circle-fill" style="color:#3b82f6"></i>
+        For informational purposes only. Always consult a qualified medical professional.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% if err %}
+<div style="padding:12px 16px;background:#fef2f2;border-radius:10px;margin-bottom:16px;font-size:.88rem;color:#991b1b;border-left:4px solid #ef4444;display:flex;gap:9px;align-items:flex-start">
+  <i class="bi bi-exclamation-triangle-fill"></i>{{ err }}
+</div>
+{% endif %}
+
+{% if ai_resp %}
+<div class="card">
+  <div class="card-hd" style="background:linear-gradient(135deg,#131a2f,#2e4493)">
+    <h3 style="color:#fff"><i class="bi bi-cpu-fill" style="color:#38bdf8"></i>Smart AI Health Analysis</h3>
+    <span style="font-size:.78rem;color:rgba(255,255,255,.6)">Generated just now</span>
+  </div>
+  <div class="card-bd" style="background:#f0f9ff">
+    <div style="white-space:pre-wrap;line-height:1.9;font-size:.92rem;color:#0f172a">{{ ai_resp }}</div>
+    <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap">
+      <a href="{{ url_for('reports') }}" class="btn btn-o"><i class="bi bi-clipboard2-pulse"></i>View All Records</a>
+      <a href="{{ url_for('vault') }}"   class="btn btn-o"><i class="bi bi-folder2-open"></i>Report Vault</a>
+    </div>
+  </div>
+</div>
+{% else %}
+<div style="text-align:center;padding:64px 32px;background:#fff;border-radius:16px;border:1px solid #e2e8f0;color:#94a3b8">
+  <i class="bi bi-lightbulb" style="font-size:3rem;display:block;margin-bottom:16px;color:#dbeafe"></i>
+  <p style="font-size:1rem;font-weight:700;color:#475569;margin-bottom:6px">No insights generated yet</p>
+  <p style="font-size:.88rem">Click <strong>Generate Health Insights</strong> above to receive a personalised health analysis based on your records.</p>
+</div>
+{% endif %}
+{% endblock %}

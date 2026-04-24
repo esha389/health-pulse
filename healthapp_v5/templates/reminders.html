@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Reminders — Health Pulse{% endblock %}
+{% block page_title %}Reminders{% endblock %}
+{% block content %}
+
+<div style="background:var(--warn-lt);border:1px solid #fde68a;border-radius:14px;padding:15px 20px;margin-bottom:20px;display:flex;align-items:flex-start;gap:13px">
+  <i class="bi bi-bell-fill" style="color:var(--warn);font-size:1.3rem;flex-shrink:0;margin-top:2px"></i>
+  <div style="flex:1">
+    <div style="font-weight:700;font-size:.9rem;color:#92400e;margin-bottom:3px">Enable Browser Notifications</div>
+    <div style="font-size:.8rem;color:#78350f;line-height:1.5">Click the bell icon in the top bar or the button below to enable popup and sound alerts. Keep this tab open for reminders to trigger automatically.</div>
+  </div>
+  <button onclick="triggerPermission()" style="background:var(--warn);border:none;color:#fff;border-radius:10px;padding:8px 16px;cursor:pointer;font-size:.8rem;font-weight:700;font-family:inherit;white-space:nowrap;flex-shrink:0">
+    Enable Notifications
+  </button>
+</div>
+
+<div class="g2" style="align-items:start">
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-plus-circle-fill" style="color:var(--blue)"></i> Add New Reminder</h3></div>
+    <div class="card-bd">
+      <form method="POST">
+        <div class="fg">
+          <label>Reminder Title *</label>
+          <input type="text" name="title" class="fc" placeholder="e.g. Take Metformin 500mg" required>
+        </div>
+        <div class="g2">
+          <div class="fg">
+            <label>Type</label>
+            <select name="reminder_type" class="fc">
+              <option value="medication">💊 Medication</option>
+              <option value="test">🔬 Lab Test</option>
+              <option value="appointment">🏥 Appointment</option>
+              <option value="exercise">🏃 Exercise</option>
+              <option value="other">📌 Other</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Repeat</label>
+            <select name="repeat" class="fc">
+              <option value="none">No Repeat</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Due Date &amp; Time *</label>
+          <input type="datetime-local" name="due_date" class="fc" required>
+        </div>
+        <button type="submit" class="btn btn-p" style="width:100%;justify-content:center">
+          <i class="bi bi-bell-fill"></i> Set Reminder
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div class="g2">
+      <div class="stat" style="border-top:3px solid var(--warn)">
+        <div class="lbl">Pending</div>
+        <div class="val" style="color:var(--warn)">{{ reminders|selectattr('is_done','equalto',false)|list|length }}</div>
+        <div class="sub">reminders due</div>
+      </div>
+      <div class="stat" style="border-top:3px solid var(--ok)">
+        <div class="lbl">Completed</div>
+        <div class="val" style="color:var(--ok)">{{ reminders|selectattr('is_done','equalto',true)|list|length }}</div>
+        <div class="sub">done</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-bd">
+        <h4 style="color:var(--blue);font-size:.88rem;margin-bottom:10px"><i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i> Tips</h4>
+        <ul style="font-size:.82rem;color:var(--text2);line-height:2.3;list-style:none;padding:0">
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:7px"></i>Click "Enable Notifications" above to activate alerts</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:7px"></i>Keep this browser tab open for alerts to trigger</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:7px"></i>Set medication reminders 15–30 minutes before taking</li>
+          <li><i class="bi bi-check-circle-fill" style="color:var(--ok);margin-right:7px"></i>Schedule fasting lab tests for the morning</li>
+        </ul>
+        <button onclick="testBeep()" style="width:100%;margin-top:12px;background:var(--sky-lt);border:1.5px solid var(--sky-md);color:var(--blue);border-radius:10px;padding:9px;cursor:pointer;font-size:.84rem;font-weight:700;font-family:inherit;transition:background .15s">
+          <i class="bi bi-volume-up-fill"></i> Test Sound Alert
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:20px">
+  <div class="card-hd">
+    <h3><i class="bi bi-list-check" style="color:var(--blue)"></i> All Reminders</h3>
+    <span style="font-size:.8rem;color:var(--text3);font-weight:600">{{ reminders|length }} total</span>
+  </div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Status</th><th>Title</th><th>Type</th><th>Repeat</th><th>Due Date &amp; Time</th><th>Actions</th></tr></thead>
+    <tbody>
+      {% set icons={'medication':'💊','test':'🔬','appointment':'🏥','exercise':'🏃','other':'📌'} %}
+      {% for r in reminders %}
+      <tr style="{{ 'opacity:.5' if r.is_done }}">
+        <td>
+          {% if r.is_done %}
+          <span style="background:var(--ok-lt);color:#15803d;border-radius:10px;padding:4px 10px;font-size:.7rem;font-weight:700;border:1px solid #bbf7d0">&#10003; Done</span>
+          {% else %}
+          <span style="background:var(--warn-lt);color:#92400e;border-radius:10px;padding:4px 10px;font-size:.7rem;font-weight:700;border:1px solid #fde68a">&#9679; Pending</span>
+          {% endif %}
+        </td>
+        <td style="font-weight:{% if not r.is_done %}700{% else %}400{% endif %};text-decoration:{% if r.is_done %}line-through{% else %}none{% endif %};font-size:.88rem;color:var(--text)">{{ r.title }}</td>
+        <td style="font-size:.84rem">{{ icons.get(r.reminder_type,'📌') }} {{ r.reminder_type|capitalize }}</td>
+        <td style="font-size:.78rem;color:var(--text3)">{{ r.repeat|capitalize }}</td>
+        <td style="font-size:.84rem;color:var(--text2)">{{ r.due_date.strftime('%d %b %Y, %I:%M %p') if r.due_date else '—' }}</td>
+        <td>
+          <div style="display:flex;gap:7px">
+            {% if not r.is_done %}
+            <form method="POST" action="{{ url_for('reminder_done',rid=r.id) }}">
+              <button type="submit" class="btn btn-sm" style="background:var(--ok-lt);color:#15803d;border:1.5px solid #bbf7d0"><i class="bi bi-check-lg"></i> Mark Done</button>
+            </form>{% endif %}
+            <form method="POST" action="{{ url_for('reminder_delete',rid=r.id) }}" onsubmit="return confirm('Delete this reminder?')">
+              <button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text3);padding:36px;font-size:.9rem">No reminders yet. Add your first reminder above.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function triggerPermission(){
+  if('Notification' in window){
+    Notification.requestPermission().then(p=>{
+      if(p==='granted'){ new Notification('Health Pulse 🔔',{body:'Notifications enabled! You will now receive reminder alerts.'}); }
+      else{ alert('Notifications are blocked. Please allow them in your browser settings for this site.'); }
+    });
+  }
+}
+function testBeep(){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [[523,0],[659,.22],[784,.44]].forEach(([f,t])=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.connect(g);g.connect(ctx.destination);o.frequency.value=f;o.type='sine';
+      g.gain.setValueAtTime(0,ctx.currentTime+t);
+      g.gain.linearRampToValueAtTime(.28,ctx.currentTime+t+.05);
+      g.gain.linearRampToValueAtTime(0,ctx.currentTime+t+.4);
+      o.start(ctx.currentTime+t);o.stop(ctx.currentTime+t+.45);
+    });
+  }catch(e){alert('Click the button again to unlock audio.');}
+}
+</script>
+{% endblock %}

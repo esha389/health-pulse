@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sign In — HealthPulse</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  --teal:    #00d4ff;
+  --teal-d:  #0099cc;
+  --navy:    #020b18;
+  --royal:   #1a3a8f;
+  --sky:     #7dd3fc;
+  --bg:      #020b18;
+  --white:   #ffffff;
+  --text:    #0f172a;
+  --text2:   #475569;
+  --text3:   #94a3b8;
+  --border:  #e2e8f0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Nunito', sans-serif;
+  background: #143d75;
+  overflow: hidden;
+}
+
+/* ── Full-screen canvas behind everything ── */
+#bgCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ── Page layout ── */
+.page {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* ── Card ── */
+.card {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 920px;
+  max-width: 100%;
+  min-height: 540px;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 2px 4px rgba(8,145,178,.04),
+    0 8px 24px rgba(8,145,178,.08),
+    0 32px 72px rgba(14, 116, 144, 0.87);
+  animation: cardRise .7s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes cardRise {
+  from { opacity:0; transform:translateY(28px) scale(.98); }
+  to   { opacity:1; transform:translateY(0)   scale(1); }
+}
+
+/* ── Left panel ── */
+.left {
+  background: linear-gradient(160deg, #67a6f1 0%, #062c5a 40%, #083d72 75%, #09508e 100%);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+/* SVG DNA fills the entire left panel, rotated diagonally */
+.dna-svg-wrap {
+  position: absolute;
+  inset: -40%;
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dna-svg-wrap svg {
+  transform: rotate(-28deg);
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+/* Strand glow animations */
+@keyframes dnaGlow {
+  0%,100% { filter: drop-shadow(0 0 4px #00d4ff) drop-shadow(0 0 8px #0080ff); }
+  50%      { filter: drop-shadow(0 0 10px #00ffee) drop-shadow(0 0 22px #00aaff); }
+}
+@keyframes rungGlow {
+  0%,100% { opacity: 0.55; }
+  50%      { opacity: 0.95; }
+}
+@keyframes nodeGlow {
+  0%,100% { r: 5; opacity: 0.8; }
+  50%      { r: 7; opacity: 1.0; }
+}
+@keyframes dnaScroll {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+.dna-scroll { animation: dnaScroll 6s linear infinite; }
+.dna-strand { animation: dnaGlow 3s ease-in-out infinite; }
+.dna-rungs  { animation: rungGlow 3s ease-in-out infinite; }
+/* Dark gradient overlay so text stays readable */
+.left-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg,
+      rgba(4,24,48,.85) 0%,
+      rgba(65, 123, 193, 0.88) 30%,
+      rgba(4,24,48,.25) 70%,
+      rgba(4,24,48,.90) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+/* All left panel content sits on z-index 2 */
+.logo-row {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  position: relative; z-index: 2;
+  padding: 36px 36px 0;
+}
+.logo-icon {
+  width: 46px; height: 46px;
+  background: linear-gradient(135deg, rgba(0,220,255,.45), rgba(0,120,255,.35));
+  border: 1px solid rgba(0,220,255,.5);
+  border-radius: 14px;
+  display: flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 22px rgba(0,200,255,.45);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+.logo-icon svg { width:22px; height:22px; }
+@keyframes logoPulse {
+  0%,100% { box-shadow: 0 0 14px rgba(0,200,255,.4); }
+  50%      { box-shadow: 0 0 32px rgba(0,220,255,.8), 0 0 0 8px rgba(0,180,255,0); }
+}
+.logo-name { font-size:1.1rem; font-weight:900; color:#fff; letter-spacing:-.02em; }
+.logo-tag  { font-size:.62rem; color:rgba(0,220,255,.75); letter-spacing:.09em; text-transform:uppercase; margin-top:1px; display:block; }
+
+.left-body {
+  position:relative; z-index:2; flex:1;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  padding: 0 36px 8px;
+}
+.left-body h2 {
+  font-size:1.65rem; font-weight:900; color:#fff;
+  letter-spacing:-.03em; line-height:1.2; margin-bottom:8px;
+  text-shadow: 0 0 24px rgba(0,200,255,.5), 0 2px 8px rgba(0,0,0,.6);
+}
+.left-body p { font-size:.84rem; color:rgba(160,220,255,.7); line-height:1.65; margin-bottom:16px; }
+
+.feat-list { display:flex; flex-direction:column; gap:8px; }
+.feat {
+  display:flex; align-items:center; gap:10px;
+  opacity: 0;
+  animation: featIn .5s ease both;
+}
+.feat:nth-child(1){ animation-delay:.35s }
+.feat:nth-child(2){ animation-delay:.5s  }
+.feat:nth-child(3){ animation-delay:.65s }
+@keyframes featIn {
+  from { opacity:0; transform:translateX(-14px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.feat-ic {
+  width: 32px; height: 32px; flex-shrink:0;
+  background: rgba(0,180,255,.15);
+  border: 1px solid rgba(0,220,255,.3);
+  border-radius: 8px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.9rem; color:#00d4ff;
+  box-shadow: 0 0 10px rgba(0,180,255,.2);
+}
+.feat-text h4 { font-size:.8rem; font-weight:800; color:#e0f4ff; }
+.feat-text p  { font-size:.7rem; color:rgba(140,200,255,.55); margin-top:1px; }
+
+/* Stat badges row at bottom */
+.stat-badges {
+  display: flex; gap: 8px;
+  position: relative; z-index:2;
+  padding: 12px 36px 28px;
+}
+.stat-badge {
+  flex:1; padding: 8px 10px; border-radius: 10px;
+  background: rgba(0,180,255,.08);
+  border: 1px solid rgba(0,220,255,.2);
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+.stat-badge .val {
+  font-size: 1.05rem; font-weight: 900; color: #00d4ff;
+  display: block; line-height: 1;
+  text-shadow: 0 0 14px rgba(0,212,255,.7);
+}
+.stat-badge .lbl {
+  font-size: .57rem; color: rgba(140,200,255,.55);
+  text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; display:block;
+}
+
+/* ── Right panel ── */
+.right {
+  background: rgba(244, 244, 244, 0.95);
+  padding: 48px 44px;
+  display:flex; flex-direction:column; justify-content:center;
+}
+
+.form-head { margin-bottom:32px; }
+.form-head h3 {
+  font-size:1.55rem; font-weight:900; color:var(--text);
+  letter-spacing:-.03em; margin-bottom:4px;
+}
+.form-head p { font-size:.88rem; color:var(--text2); }
+
+/* ── Input groups ── */
+.fg { margin-bottom:18px; position:relative; }
+
+/* Floating label */
+.fl-wrap { position:relative; }
+.fl-wrap label {
+  position:absolute;
+  left: 44px; top:50%; transform:translateY(-50%);
+  font-size:.88rem; font-weight:700; color:var(--text3);
+  pointer-events:none;
+  transition: all .22s cubic-bezier(.16,1,.3,1);
+  background:#fff;
+  padding: 0 4px;
+  z-index:1;
+}
+.fl-wrap.active label,
+.fl-wrap.filled label {
+  top: 0;
+  font-size:.68rem;
+  color: var(--teal);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.fl-wrap input {
+  width:100%;
+  padding: 15px 44px 15px 44px;
+  border: 1.8px solid var(--border);
+  border-radius: 11px;
+  font-family: 'Nunito'; font-size:.93rem; color:var(--text);
+  background: #fff;
+  outline: none;
+  transition: all .25s ease;
+}
+.fl-wrap input:focus {
+  border-color: var(--teal);
+  box-shadow:
+    0 0 0 4px rgba(8,145,178,.10),
+    0 2px 12px rgba(8,145,178,.14);
+  background: #fafdff;
+}
+/* Glow ring pulse on focus */
+.fl-wrap input:focus + .glow-ring {
+  opacity:1;
+}
+.glow-ring {
+  position:absolute; inset:-2px;
+  border-radius:13px;
+  border: 2px solid rgba(8,145,178,.35);
+  pointer-events:none;
+  opacity:0;
+  transition: opacity .25s;
+  animation: ringPulse 2s ease-in-out infinite;
+}
+@keyframes ringPulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(8,145,178,.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(8,145,178,0); }
+}
+.field-icon {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%);
+  color:var(--text3); font-size:1rem; pointer-events:none;
+  transition: color .25s;
+  z-index:2;
+}
+.fl-wrap.active .field-icon,
+.fl-wrap input:focus ~ .field-icon { color:var(--teal); }
+.eye-btn {
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer;
+  color:var(--text3); font-size:1rem; padding:2px;
+  transition: color .2s; z-index:2;
+}
+.eye-btn:hover { color:var(--teal); }
+
+/* ── Submit button ── */
+.btn-submit {
+  width:100%; padding:14px;
+  background: linear-gradient(135deg, var(--royal), var(--teal));
+  color:#fff; border:none; border-radius:11px;
+  font-family:'Nunito'; font-size:.95rem; font-weight:900;
+  cursor:pointer; letter-spacing:.01em;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  transition: all .22s;
+  box-shadow: 0 4px 16px rgba(8,145,178,.3), 0 1px 4px rgba(8,145,178,.2);
+  position:relative; overflow:hidden;
+  margin-top:6px;
+}
+.btn-submit::before {
+  content:'';
+  position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(255,255,255,.12), transparent);
+  opacity:0; transition: opacity .2s;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(8,145,178,.4), 0 2px 8px rgba(8,145,178,.25);
+}
+.btn-submit:hover::before { opacity:1; }
+.btn-submit:active { transform:translateY(0); }
+
+/* Ripple on click */
+.ripple {
+  position:absolute;
+  border-radius:50%;
+  background:rgba(137, 194, 244, 0.92);
+  transform:scale(0);
+  animation: rippleGo .55s linear;
+  pointer-events:none;
+}
+@keyframes rippleGo {
+  to { transform:scale(4); opacity:0; }
+}
+
+/* ── Footer ── */
+.form-foot { text-align:center; margin-top:20px; font-size:.85rem; color:var(--text3); }
+.form-foot a { color:var(--teal); font-weight:800; text-decoration:none; }
+.form-foot a:hover { text-decoration:underline; }
+
+/* ── Flash messages ── */
+.alert {
+  padding:11px 14px; border-radius:10px;
+  margin-bottom:18px; font-size:.84rem; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+  animation: alertIn .3s ease;
+}
+@keyframes alertIn {
+  from { opacity:0; transform:translateY(-6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.alert-error   { background:#fef2f2; color:#991b1b; border-left:3px solid #ef4444; }
+.alert-success { background:#f0fdf4; color:#166534; border-left:3px solid #10b981; }
+
+/* ── Responsive ── */
+@media(max-width:680px) {
+  .card { grid-template-columns:1fr; }
+  .left { display:none; }
+  .right { padding:40px 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Particle canvas -->
+<canvas id="bgCanvas"></canvas>
+
+<div class="page">
+  <div class="card">
+
+    <!-- Left panel -->
+    <div class="left">
+      <!-- SVG DNA Helix -->
+      <div class="dna-svg-wrap">
+        <svg viewBox="0 0 200 1200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <filter id="glow2" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <linearGradient id="s1g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00eeff"/>
+              <stop offset="50%" stop-color="#0088ff"/>
+              <stop offset="100%" stop-color="#00eeff"/>
+            </linearGradient>
+            <linearGradient id="s2g" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#00ffcc"/>
+              <stop offset="50%" stop-color="#00aaff"/>
+              <stop offset="100%" stop-color="#00ffcc"/>
+            </linearGradient>
+          </defs>
+          <!-- Scrolling group: duplicate content so scroll loops seamlessly -->
+          <g class="dna-scroll">
+            <!-- === REPEAT BLOCK 1 (y 0..600) === -->
+            <!-- Strand 1: S-wave left→right→left -->
+            <path class="dna-strand" d="
+              M 100,0
+              C 100,30 160,60 160,100
+              C 160,140 40,170 40,200
+              C 40,230 160,260 160,300
+              C 160,340 40,370 40,400
+              C 40,430 160,460 160,500
+              C 160,540 40,570 40,600
+            " fill="none" stroke="url(#s1g)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"
+              opacity="0.9"/>
+            <!-- Strand 2: opposite phase -->
+            <path class="dna-strand" style="animation-delay:.4s" d="
+              M 100,0
+              C 100,30 40,60 40,100
+              C 40,140 160,170 160,200
+              C 160,230 40,260 40,300
+              C 40,340 160,370 160,400
+              C 160,430 40,460 40,500
+              C 40,540 160,570 160,600
+            " fill="none" stroke="url(#s2g)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)"
+              opacity="0.9"/>
+            <!-- Rungs at crossing points and mid-points -->
+            <g class="dna-rungs" filter="url(#glow)">
+              <!-- y=0 cross --><line x1="100" y1="0"   x2="100" y2="0"   stroke="#00ffee" stroke-width="2" opacity="0"/>
+              <!-- y=50  --><line x1="140" y1="50"  x2="60"  y2="50"  stroke="#00eeff" stroke-width="2.2"/>
+              <!-- y=100 node cross --><line x1="160" y1="100" x2="40"  y2="100" stroke="#00ccff" stroke-width="2.5"/>
+              <!-- y=150 --><line x1="100" y1="150" x2="100" y2="150" stroke="#00ffee" stroke-width="2" opacity="0"/>
+              <!-- y=200 cross --><line x1="40"  y1="200" x2="160" y2="200" stroke="#00eeff" stroke-width="2.5"/>
+              <!-- y=250 --><line x1="60"  y1="250" x2="140" y2="250" stroke="#00ccff" stroke-width="2.2"/>
+              <!-- y=300 cross --><line x1="160" y1="300" x2="40"  y2="300" stroke="#00eeff" stroke-width="2.5"/>
+              <!-- y=350 --><line x1="140" y1="350" x2="60"  y2="350" stroke="#00ffee" stroke-width="2.2"/>
+              <!-- y=400 cross --><line x1="40"  y1="400" x2="160" y2="400" stroke="#00ccff" stroke-width="2.5"/>
+              <!-- y=450 --><line x1="60"  y1="450" x2="140" y2="450" stroke="#00eeff" stroke-width="2.2"/>
+              <!-- y=500 cross --><line x1="160" y1="500" x2="40"  y2="500" stroke="#00eeff" stroke-width="2.5"/>
+              <!-- y=550 --><line x1="140" y1="550" x2="60"  y2="550" stroke="#00ffee" stroke-width="2.2"/>
+            </g>
+            <!-- Glowing nodes at strand crossings -->
+            <g filter="url(#glow2)">
+              <circle cx="160" cy="100" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="100" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.3s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="200" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.5s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="200" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.8s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="300" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="1.0s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="300" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.2s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="400" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.7s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="400" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.4s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="500" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.9s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="500" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.6s" repeatCount="indefinite"/></circle>
+            </g>
+            <!-- === REPEAT BLOCK 2 (y 600..1200, identical, for seamless loop) === -->
+            <path class="dna-strand" d="
+              M 100,600
+              C 100,630 160,660 160,700
+              C 160,740 40,770 40,800
+              C 40,830 160,860 160,900
+              C 160,940 40,970 40,1000
+              C 40,1030 160,1060 160,1100
+              C 160,1140 40,1170 40,1200
+            " fill="none" stroke="url(#s1g)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)" opacity="0.9"/>
+            <path class="dna-strand" style="animation-delay:.4s" d="
+              M 100,600
+              C 100,630 40,660 40,700
+              C 40,740 160,770 160,800
+              C 160,830 40,860 40,900
+              C 40,940 160,970 160,1000
+              C 160,1030 40,1060 40,1100
+              C 40,1140 160,1170 160,1200
+            " fill="none" stroke="url(#s2g)" stroke-width="3.5" stroke-linecap="round" filter="url(#glow)" opacity="0.9"/>
+            <g class="dna-rungs" filter="url(#glow)">
+              <line x1="140" y1="650"  x2="60"  y2="650"  stroke="#00eeff" stroke-width="2.2"/>
+              <line x1="160" y1="700"  x2="40"  y2="700"  stroke="#00ccff" stroke-width="2.5"/>
+              <line x1="40"  y1="800"  x2="160" y2="800"  stroke="#00eeff" stroke-width="2.5"/>
+              <line x1="60"  y1="850"  x2="140" y2="850"  stroke="#00ccff" stroke-width="2.2"/>
+              <line x1="160" y1="900"  x2="40"  y2="900"  stroke="#00eeff" stroke-width="2.5"/>
+              <line x1="140" y1="950"  x2="60"  y2="950"  stroke="#00ffee" stroke-width="2.2"/>
+              <line x1="40"  y1="1000" x2="160" y2="1000" stroke="#00ccff" stroke-width="2.5"/>
+              <line x1="60"  y1="1050" x2="140" y2="1050" stroke="#00eeff" stroke-width="2.2"/>
+              <line x1="160" y1="1100" x2="40"  y2="1100" stroke="#00eeff" stroke-width="2.5"/>
+              <line x1="140" y1="1150" x2="60"  y2="1150" stroke="#00ffee" stroke-width="2.2"/>
+            </g>
+            <g filter="url(#glow2)">
+              <circle cx="160" cy="700"  r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="700"  r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.3s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="800"  r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.5s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="800"  r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.8s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="900"  r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="1.0s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="900"  r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.2s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="1000" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.7s" repeatCount="independite"/></circle>
+              <circle cx="160" cy="1000" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.4s" repeatCount="indefinite"/></circle>
+              <circle cx="160" cy="1100" r="6" fill="#00eeff" opacity="0.95"><animate attributeName="r" values="5;8;5" dur="2s" begin="0.9s" repeatCount="indefinite"/></circle>
+              <circle cx="40"  cy="1100" r="5" fill="#00ffcc" opacity="0.85"><animate attributeName="r" values="4;7;4" dur="2s" begin="0.6s" repeatCount="indefinite"/></circle>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <!-- Gradient overlay for text readability -->
+      <div class="left-overlay"></div>
+
+      <div class="logo-row">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 12h3l2.5-8 5 18 3-10 2 5h5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <div class="logo-name">HealthPulse</div>
+          <span class="logo-tag">Smart Health Records</span>
+        </div>
+      </div>
+
+      <div class="left-body">
+        <h1>Your health,<br>intelligently<br>managed.</h1>
+        <p>Upload any lab report and our Smart AI System reads, organises, and analyses every value — instantly.</p>
+        <div class="feat-list">
+          <div class="feat">
+            <div class="feat-ic"><i class="bi bi-file-medical-fill"></i></div>
+            <div class="feat-text">
+              <h4>Upload Any Lab Report</h4>
+              <p>PDF or image — all values extracted automatically</p>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-ic"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="feat-text">
+              <h4>Trend Analysis</h4>
+              <p>Track how your health changes over time</p>
+            </div>
+          </div>
+          <div class="feat">
+            <div class="feat-ic"><i class="bi bi-shield-check"></i></div>
+            <div class="feat-text">
+              <h4>AI Health Guard</h4>
+              <p>Smart alerts for abnormal values instantly</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health stat badges -->
+      <div class="stat-badges">
+        <div class="stat-badge">
+          <span class="val">98%</span>
+          <span class="lbl">Accuracy</span>
+        </div>
+        <div class="stat-badge">
+          <span class="val">2s</span>
+          <span class="lbl">Analysis</span>
+        </div>
+        <div class="stat-badge">
+          <span class="val">50+</span>
+          <span class="lbl">Biomarkers</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right panel -->
+    <div class="right">
+      <div class="form-head">
+        <h3>Welcome Back</h3>
+        <p>Sign in to your HealthPulse account</p>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=True) %}
+        {% for c, m in messages %}
+        <div class="alert alert-{{ 'error' if c == 'error' else 'success' }}">
+          <i class="bi bi-{% if c == 'error' %}exclamation-triangle-fill{% else %}check-circle-fill{% endif %}"></i>
+          {{ m }}
+        </div>
+        {% endfor %}
+      {% endwith %}
+
+      <form method="POST" id="loginForm" autocomplete="off">
+
+        <!-- Email field -->
+        <div class="fg">
+          <div class="fl-wrap" id="emailWrap">
+            <i class="bi bi-envelope-fill field-icon"></i>
+            <input type="email" name="email" id="emailInput"
+                   placeholder=" " required autocomplete="email"
+                   oninput="checkFilled(this,'emailWrap')"
+                   onfocus="activate('emailWrap')"
+                   onblur="deactivate('emailWrap',this)">
+            <div class="glow-ring"></div>
+            <label for="emailInput">Email Address</label>
+          </div>
+        </div>
+
+        <!-- Password field -->
+        <div class="fg">
+          <div class="fl-wrap" id="pwWrap">
+            <i class="bi bi-lock-fill field-icon"></i>
+            <input type="password" name="password" id="pwInput"
+                   placeholder=" " required
+                   oninput="checkFilled(this,'pwWrap')"
+                   onfocus="activate('pwWrap')"
+                   onblur="deactivate('pwWrap',this)">
+            <div class="glow-ring"></div>
+            <label for="pwInput">Password</label>
+            <button type="button" class="eye-btn" id="eyeBtn" onclick="togglePw()">
+              <i class="bi bi-eye-fill" id="eyeIc"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn" onclick="rippleEffect(event,this)">
+          <i class="bi bi-box-arrow-in-right"></i>
+          <span id="btnText">Sign In to HealthPulse</span>
+        </button>
+      </form>
+
+      <div class="form-foot">
+        Don't have an account? <a href="{{ url_for('register') }}">Create one free</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   PARTICLE SYSTEM — heartbeat + DNA helix
+   ───────────────────────────────────────────── */
+const canvas  = document.getElementById('bgCanvas');
+const ctx     = canvas.getContext('2d');
+let W, H, mouse = {x: -999, y: -999}, mouseSpeed = 0, lastMouse = {x:0, y:0};
+let particles = [];
+let frame = 0;
+let mode = 'idle'; // idle | heartbeat | helix
+
+/* Bright neon palette for DNA helix */
+const helixColors = [
+  '0,255,253',     // cyan
+  '255,0,220',     // magenta
+  '0,255,128',     // lime green
+  '255,165,0',     // orange
+  '100,100,255',   // electric blue
+  '255,255,0',     // yellow
+  '255,80,80',     // bright red
+  '180,0,255'      // purple
+];
+
+function resize() {
+  W = canvas.width  = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', () => { resize(); initParticles(); });
+
+/* Mouse tracking */
+document.addEventListener('mousemove', e => {
+  const dx = e.clientX - lastMouse.x, dy = e.clientY - lastMouse.y;
+  mouseSpeed = Math.min(Math.sqrt(dx*dx + dy*dy), 80);
+  lastMouse.x = e.clientX; lastMouse.y = e.clientY;
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+  /* Continuously update heartbeat targets based on mouse position */
+  if (mode === 'heartbeat') assignTargets(mode);
+});
+document.addEventListener('mouseleave', () => { mouse.x = -999; mouse.y = -999; mouseSpeed = 0; });
+
+/* ── Particle class ── */
+class Particle {
+  constructor() { this.reset(); }
+
+  reset() {
+    this.ox = Math.random() * W;   // origin
+    this.oy = Math.random() * H;
+    this.x  = this.ox;
+    this.y  = this.oy;
+    this.tx = this.ox;             // target (morphing)
+    this.ty = this.oy;
+    this.vx = (Math.random() - .5) * .4;
+    this.vy = (Math.random() - .5) * .4;
+    this.baseR  = Math.random() * 2.2 + 1.0;  /* bigger idle particles */
+    this.r  = this.baseR;
+    this.alpha = Math.random() * .5 + .15;
+    this.col = Math.random() > .5 ? '0,180,255' : '30,100,255';
+    this.helixCol = helixColors[Math.floor(Math.random() * helixColors.length)];
+    this.morphed = false;
+    this.lerpSpeed = .028 + Math.random() * .025;
+  }
+
+  update(morphFactor) {
+    /* Drift gently */
+    if (!this.morphed) {
+      this.ox += this.vx;
+      this.oy += this.vy;
+      if (this.ox < 0 || this.ox > W) this.vx *= -1;
+      if (this.oy < 0 || this.oy > H) this.vy *= -1;
+    }
+
+    /* Mouse repulsion */
+    const dx = this.x - mouse.x, dy = this.y - mouse.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if (dist < 110) {
+      const f = (110 - dist) / 110;
+      this.ox += dx/dist * f * 2.8;
+      this.oy += dy/dist * f * 2.8;
+    }
+
+    /* Lerp toward target */
+    const lx = this.morphed ? this.tx : this.ox;
+    const ly = this.morphed ? this.ty : this.oy;
+    this.x += (lx - this.x) * this.lerpSpeed;
+    this.y += (ly - this.y) * this.lerpSpeed;
+  }
+
+  draw() {
+    const isHelix = mode === 'helix' && this.morphed;
+    const isHB    = mode === 'heartbeat' && this.morphed;
+    /* Helix: 5x bigger; heartbeat: 2x bigger */
+    const drawR = isHelix ? this.baseR * 5.5 : (isHB ? this.baseR * 2.2 : this.baseR);
+    const drawAlpha = isHelix ? 1.0 : (isHB ? Math.min(this.alpha * 2.0, .9) : this.alpha);
+    const drawCol = isHelix ? this.helixCol : this.col;
+    this.r = this.r + (drawR - this.r) * 0.07;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI*2);
+
+    if (isHelix) {
+      /* Vibrant solid fill with strong glow */
+      ctx.shadowColor = `rgba(${drawCol},1)`;
+      ctx.shadowBlur  = this.r * 3.5;
+      ctx.fillStyle   = `rgba(${drawCol},${drawAlpha})`;
+      ctx.fill();
+      /* Outer glow ring */
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r * 2.8, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${drawCol},0.12)`;
+      ctx.fill();
+    } else if (isHB) {
+      ctx.shadowColor = `rgba(${drawCol},0.8)`;
+      ctx.shadowBlur  = this.r * 2.5;
+      ctx.fillStyle   = `rgba(${drawCol},${drawAlpha})`;
+      ctx.fill();
+    } else {
+      ctx.fillStyle = `rgba(${drawCol},${drawAlpha})`;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+/* ── Heartbeat path sampler — responds to mouse position ── */
+function heartbeatPoint(i, total, cx, cy, scale) {
+  /* Amplitude based on mouse Y position: top of screen = high peaks, bottom = low */
+  let amp = 1.0;
+  if (mouse.y > 0 && mouse.y < H) {
+    amp = 1.0 - (mouse.y / H); // 0 at bottom, 1 at top
+    amp = 0.15 + amp * 1.8;     // range ~0.15 to ~1.95
+  }
+  /* Frequency/speed influenced by mouse X */
+  let beats = 2;
+  if (mouse.x > 0 && mouse.x < W) {
+    beats = 1.5 + (mouse.x / W) * 2.5; // 1.5 to 4 beats across width
+  }
+
+  const t = (i / total) * beats;
+  const seg = t % 1;
+  let px, py;
+  /* Realistic ECG waveform: P wave, QRS complex, T wave */
+  if      (seg < .10) { px = seg/.10;                                   py = .5; }                          // baseline
+  else if (seg < .16) { const s=(seg-.10)/.06; px = 1+s;                py = .5 - Math.sin(s*Math.PI)*0.15*amp; }  // P wave (small bump)
+  else if (seg < .22) { px = 2+(seg-.16)/.06;                           py = .5; }                          // PR segment
+  else if (seg < .25) { const s=(seg-.22)/.03; px = 3+s;                py = .5 + s*0.3*amp; }               // Q dip
+  else if (seg < .30) { const s=(seg-.25)/.05; px = 4+s;                py = .5 + 0.3*amp - s*2.0*amp; }     // R spike up
+  else if (seg < .35) { const s=(seg-.30)/.05; px = 5+s;                py = .5 - 1.7*amp + s*2.3*amp; }     // S dip down
+  else if (seg < .40) { const s=(seg-.35)/.05; px = 6+s;                py = .5 + 0.6*amp - s*0.6*amp; }     // return to baseline
+  else if (seg < .50) { px = 7+(seg-.40)/.10;                           py = .5; }                          // ST segment
+  else if (seg < .60) { const s=(seg-.50)/.10; px = 8+s;                py = .5 - Math.sin(s*Math.PI)*0.35*amp; } // T wave
+  else                { px = 9+(seg-.60)/.40;                           py = .5; }                          // baseline rest
+  
+  const totalPx = 10;
+  return {
+    x: cx + (px/totalPx - .5) * scale * 1.4,
+    y: cy + py * scale * .5 - scale*.25
+  };
+}
+
+/* ── DNA helix sampler — bigger, more dramatic ── */
+function helixPoint(i, total, cx, cy, scale) {
+  const t = i / total * Math.PI * 8;
+  const strand = i % 2 === 0;
+  const helixRadius = scale * .32; // wider helix
+  return {
+    x: cx + Math.cos(t + (strand ? 0 : Math.PI)) * helixRadius,
+    y: cy - scale*.5 + (i/total) * scale
+  };
+}
+
+function assignTargets(modeNow) {
+  const cx = W/2, cy = H/2;
+  const scale = Math.min(W, H) * .65;
+  particles.forEach((p, i) => {
+    if (modeNow === 'heartbeat') {
+      const pt = heartbeatPoint(i, particles.length, cx, cy, scale);
+      p.tx = pt.x; p.ty = pt.y; p.morphed = true;
+    } else if (modeNow === 'helix') {
+      const pt = helixPoint(i, particles.length, cx, cy, scale);
+      p.tx = pt.x; p.ty = pt.y; p.morphed = true;
+    } else {
+      p.morphed = false;
+    }
+  });
+}
+
+function initParticles() {
+  const count = Math.min(Math.floor(W * H / 5200), 210);
+  particles = Array.from({length: count}, () => new Particle());
+}
+initParticles();
+
+/* ── Mouse enter/leave triggers morph ── */
+const card = document.querySelector('.card');
+card.addEventListener('mouseenter', () => { mode = 'heartbeat'; assignTargets(mode); });
+card.addEventListener('mouseleave', () => { mode = 'idle';      assignTargets(mode); });
+
+/* Switch to helix on password focus */
+document.getElementById('pwInput').addEventListener('focus',  () => { mode = 'helix'; assignTargets(mode); });
+document.getElementById('pwInput').addEventListener('blur',   () => { mode = 'heartbeat'; assignTargets(mode); });
+
+/* ── Draw connections ── */
+function drawConnections() {
+  const isHelix = mode === 'helix';
+  for (let i = 0; i < particles.length; i++) {
+    for (let j = i+1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const d  = Math.sqrt(dx*dx+dy*dy);
+      const maxD = mode === 'idle' ? 88 : (isHelix ? 65 : 52);
+      if (d < maxD) {
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        const a = (1 - d/maxD) * (mode==='idle' ? .12 : (isHelix ? .35 : .22));
+        if (isHelix) {
+          ctx.strokeStyle = `rgba(${particles[i].helixCol},${a})`;
+          ctx.lineWidth = 1.2;
+        } else {
+          ctx.strokeStyle = `rgba(8,145,178,${a})`;
+          ctx.lineWidth = .7;
+        }
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+/* ── Sonar ripple rings — replace ECG overlay ── */
+const sonarRings = [];
+let sonarTimer = 0;
+function spawnSonarRing() {
+  sonarRings.push({ r: 0, life: 1.0, mx: mouse.x > 0 ? mouse.x : W/2, my: mouse.y > 0 ? mouse.y : H/2 });
+}
+function drawSonarRings() {
+  if (mode !== 'heartbeat') { sonarRings.length = 0; return; }
+  /* Spawn a ring every ~70 frames = ~1.2s at 60fps; 2 rings per beat feel */
+  sonarTimer++;
+  if (sonarTimer % 70 === 0) spawnSonarRing();
+  if (sonarTimer % 70 === 35) spawnSonarRing();
+
+  /* Mouse Y controls max ring radius: top = huge rings, bottom = small */
+  let maxR = 180;
+  if (mouse.y > 0 && mouse.y < H) {
+    const norm = 1.0 - (mouse.y / H);
+    maxR = 60 + norm * 280;
+  }
+
+  for (let i = sonarRings.length - 1; i >= 0; i--) {
+    const ring = sonarRings[i];
+    ring.r += (maxR - ring.r) * 0.04 + 1.5;
+    ring.life -= 0.014;
+    if (ring.life <= 0) { sonarRings.splice(i, 1); continue; }
+
+    ctx.save();
+    ctx.globalAlpha = ring.life * 0.5;
+    ctx.strokeStyle = `rgba(140,100,255,${ring.life})`;
+    ctx.shadowColor = '#8b5cf6';
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(ring.mx, ring.my, ring.r, 0, Math.PI*2);
+    ctx.stroke();
+
+    /* Second inner ring slightly smaller */
+    ctx.globalAlpha = ring.life * 0.25;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(ring.mx, ring.my, ring.r * 0.65, 0, Math.PI*2);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+
+/* ── Render loop ── */
+function loop() {
+  ctx.clearRect(0, 0, W, H);
+
+  /* Deep blue gradient background */
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0,   '#020b18');
+  grad.addColorStop(0.3, '#041530');
+  grad.addColorStop(0.6, '#071e45');
+  grad.addColorStop(1,   '#7faff3');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+
+  /* Subtle glowing orb in center */
+  const orb = ctx.createRadialGradient(W*0.5, H*0.45, 0, W*0.5, H*0.45, W*0.38);
+  orb.addColorStop(0,   'rgba(0, 150, 255, 0.10)');
+  orb.addColorStop(0.5, 'rgba(0, 80, 200, 0.06)');
+  orb.addColorStop(1,   'rgba(0, 0, 0, 0)');
+  ctx.fillStyle = orb;
+  ctx.fillRect(0, 0, W, H);
+
+  particles.forEach(p => p.update());
+  drawConnections();
+  particles.forEach(p => p.draw());
+  drawSonarRings();
+  frame++;
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* ─────────────────────────────────────────────
+   FORM UX
+   ───────────────────────────────────────────── */
+function activate(wrapId) {
+  document.getElementById(wrapId).classList.add('active');
+}
+function deactivate(wrapId, input) {
+  document.getElementById(wrapId).classList.remove('active');
+  if (input.value.trim()) document.getElementById(wrapId).classList.add('filled');
+  else                    document.getElementById(wrapId).classList.remove('filled');
+}
+function checkFilled(input, wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (input.value.trim()) wrap.classList.add('filled');
+  else                    wrap.classList.remove('filled');
+}
+
+function togglePw() {
+  const inp = document.getElementById('pwInput');
+  const ic  = document.getElementById('eyeIc');
+  if (inp.type === 'password') {
+    inp.type = 'text';
+    ic.className = 'bi bi-eye-slash-fill';
+  } else {
+    inp.type = 'password';
+    ic.className = 'bi bi-eye-fill';
+  }
+}
+
+/* Ripple on submit */
+function rippleEffect(e, btn) {
+  const rect = btn.getBoundingClientRect();
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const size = Math.max(btn.offsetWidth, btn.offsetHeight);
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+}
+
+/* Loading state on submit */
+document.getElementById('loginForm').addEventListener('submit', () => {
+  const btn = document.getElementById('submitBtn');
+  const txt = document.getElementById('btnText');
+  txt.textContent = 'Signing in…';
+  btn.style.opacity = '.8';
+  btn.disabled = true;
+  /* Spin the icon */
+  btn.querySelector('i').className = 'bi bi-arrow-repeat';
+  btn.querySelector('i').style.animation = 'spin .6s linear infinite';
+});
+</script>
+
+<style>
+@keyframes spin { to { transform:rotate(360deg); } }
+</style>
+
+</body>
+</html>
+
+  const dc  = document.getElementById('dnaCanvas');
+  const dctx = dc.getContext('2d');
+  const leftEl = document.querySelector('.left');
+
+  /* Resize to fill the left panel */
+  function resizeDNA() {
+    dc.width  = leftEl.offsetWidth;
+    dc.height = leftEl.offsetHeight;
+  }
+  resizeDNA();
+  window.addEventListener('resize', resizeDNA);
+
+  /* Floating glow particles in the bg */
+  const glows = Array.from({length: 28}, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    r: Math.random() * 2.5 + 0.8,
+    a: Math.random() * .4 + .1,
+    vx: (Math.random() - .5) * .0006,
+    vy: (Math.random() - .5) * .0006,
+    col: Math.random() > .5 ? '0,200,255' : '0,120,200'
+  }));
+
+  /* Base pair colors — alternating like A-T / G-C */
+  const rungColors = [
+    ['#00d4ff','#d7e87e'],
+    ['#00ffcc','#0099ff'],
+    ['#22d3ee','#3b82f6'],
+    ['#67e8f9','#60a5fa'],
+  ];
+
+  let dnaT = 0; // animation time
+
+  function drawDNA() {
+    const W = dc.width, H = dc.height;
+    dctx.clearRect(0, 0, W, H);
+
+    /* ── Background glow particles ── */
+    glows.forEach(g => {
+      g.x += g.vx; g.y += g.vy;
+      if (g.x < 0 || g.x > 1) g.vx *= -1;
+      if (g.y < 0 || g.y > 1) g.vy *= -1;
+      dctx.beginPath();
+      dctx.arc(g.x * W, g.y * H, g.r, 0, Math.PI*2);
+      dctx.fillStyle = `rgba(${g.col},${g.a})`;
+      dctx.fill();
+    });
+
+    /* ── Helix parameters ── */
+    const TILT   = 28 * Math.PI / 180;    // 28° diagonal tilt
+    const cx     = W * 0.54;              // slightly right of center
+    const cy     = H * 0.5;
+    const amp    = W * 0.14;              // narrower helix
+    const helixH = H * 1.05;             // total length of helix
+    const period = helixH * 0.22;        // tighter turns
+    const steps  = 140;
+    const nodeR  = 3.8;
+
+    dnaT += 0.008;
+
+    /* Work in a tilted coordinate system */
+    dctx.save();
+    dctx.translate(cx, cy);
+    dctx.rotate(TILT);
+    dctx.translate(-cx, -cy);
+
+    /* Compute strand points along the tilted axis */
+    const s1 = [], s2 = [];
+    const startY = cy - helixH / 2;
+    for (let i = 0; i <= steps; i++) {
+      const frac = i / steps;
+      const y    = startY + frac * helixH;
+      const ang  = (frac * helixH / period) * Math.PI * 2 - dnaT * Math.PI * 2;
+
+      const depth1 = (Math.sin(ang)        + 1) / 2;
+      const depth2 = (Math.sin(ang + Math.PI) + 1) / 2;
+
+      s1.push({ x: cx + Math.cos(ang)        * amp, y, depth: depth1 });
+      s2.push({ x: cx + Math.cos(ang + Math.PI) * amp, y, depth: depth2 });
+    }
+
+    /* ── Draw cross-rungs (base pairs) ── */
+    const rungStep = 7;
+    for (let i = 0; i <= steps; i += rungStep) {
+      const p1 = s1[i], p2 = s2[i];
+      if (!p1 || !p2) continue;
+
+      const avgDepth = (p1.depth + p2.depth) / 2;
+      if (avgDepth < 0.08) continue;  // skip nearly-hidden rungs
+
+      const col = rungColors[Math.floor(i / rungStep) % rungColors.length];
+
+      const grad = dctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
+      grad.addColorStop(0,   hexAlpha(col[0], avgDepth * 0.7));
+      grad.addColorStop(0.5, hexAlpha(col[1], avgDepth * 0.95));
+      grad.addColorStop(1,   hexAlpha(col[0], avgDepth * 0.7));
+
+      dctx.save();
+      dctx.beginPath();
+      dctx.moveTo(p1.x, p1.y);
+      dctx.lineTo(p2.x, p2.y);
+      dctx.strokeStyle = grad;
+      dctx.lineWidth   = 1.8 * avgDepth + 0.5;
+      dctx.shadowColor = col[1];
+      dctx.shadowBlur  = 8 * avgDepth;
+      dctx.stroke();
+      dctx.restore();
+    }
+
+    /* ── Draw strands ── */
+    [s1, s2].forEach((strand, si) => {
+      for (let i = 0; i < strand.length - 1; i++) {
+        const p  = strand[i];
+        const pn = strand[i+1];
+        if (p.depth < 0.05) continue;
+        const alpha = 0.35 + p.depth * 0.65;
+        const lw    = 0.8 + p.depth * 3.0;
+
+        dctx.save();
+        dctx.beginPath();
+        dctx.moveTo(p.x, p.y);
+        dctx.lineTo(pn.x, pn.y);
+        dctx.strokeStyle = si === 0
+          ? `rgba(0,${Math.floor(150 + p.depth*105)},255,${alpha})`
+          : `rgba(0,${Math.floor(200 + p.depth*55)},230,${alpha})`;
+        dctx.lineWidth   = lw;
+        dctx.shadowColor = '#00d4ff';
+        dctx.shadowBlur  = 10 * p.depth;
+        dctx.stroke();
+        dctx.restore();
+      }
+
+      /* ── Nodes at rung positions ── */
+      strand.forEach((p, i) => {
+        if (i % rungStep !== 0 || p.depth < 0.08) return;
+        const r     = nodeR * (0.35 + p.depth * 0.95);
+        const alpha = 0.45 + p.depth * 0.55;
+
+        /* Outer glow aura */
+        dctx.save();
+        dctx.beginPath();
+        dctx.arc(p.x, p.y, r * 3, 0, Math.PI*2);
+        dctx.fillStyle = `rgba(0,200,255,${alpha * 0.12})`;
+        dctx.fill();
+        dctx.restore();
+
+        /* Node sphere with radial gradient */
+        const ng = dctx.createRadialGradient(p.x - r*.3, p.y - r*.35, 0, p.x, p.y, r);
+        ng.addColorStop(0, `rgba(230,248,255,${alpha})`);
+        ng.addColorStop(1, si === 0
+          ? `rgba(0,160,255,${alpha * 0.75})`
+          : `rgba(0,230,210,${alpha * 0.75})`);
+
+        dctx.save();
+        dctx.beginPath();
+        dctx.arc(p.x, p.y, r, 0, Math.PI*2);
+        dctx.fillStyle   = ng;
+        dctx.shadowColor = '#00d4ff';
+        dctx.shadowBlur  = 16 * p.depth;
+        dctx.fill();
+        dctx.restore();
+      });
+    });
+
+    dctx.restore(); /* end tilted transform */
+
+    requestAnimationFrame(drawDNA);
+  }
+
+  /* Helper: hex color → rgba string with alpha */
+  function hexAlpha(hex, a) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${a.toFixed(2)})`;
+  }
+
+  drawDNA();
+})();
+</script>
+</body>
+</html>

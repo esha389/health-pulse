@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}BMI &amp; Obesity — Health Pulse{% endblock %}
+{% block page_title %}BMI &amp; Obesity Tracker{% endblock %}
+{% block content %}
+<div class="g2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-person-standing" style="color:#16a34a"></i> Calculate BMI</h3></div>
+    <div class="card-bd">
+      <form method="POST">
+        <div class="g2">
+          <div class="fg">
+            <label>Height (cm) *</label>
+            <input type="number" name="height_cm" class="fc" placeholder="e.g. 165" step="0.1" min="50" max="250" required>
+          </div>
+          <div class="fg">
+            <label>Weight (kg) *</label>
+            <input type="number" name="weight_kg" class="fc" placeholder="e.g. 60" step="0.1" min="10" max="400" required>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Notes</label>
+          <input type="text" name="notes" class="fc" placeholder="Morning weight, after exercise, etc.">
+        </div>
+        <button type="submit" class="btn btn-p"><i class="bi bi-calculator-fill"></i> Calculate &amp; Save</button>
+      </form>
+      <div style="margin-top:22px">
+        <div style="font-size:.76rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px">BMI Classification</div>
+        {% for cat,range_,bg,col in [
+          ('Underweight','Below 18.5','#fef3c7','#b45309'),
+          ('Normal Weight','18.5 – 24.9','#dcfce7','#15803d'),
+          ('Overweight','25 – 29.9','#fee2e2','#b91c1c'),
+          ('Obese Class I','30 – 34.9','#fef2f2','#991b1b'),
+          ('Obese Class II+','35 or above','#fff1f2','#881337')] %}
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:9px;margin-bottom:6px;background:{{ bg }}">
+          <span style="font-weight:700;font-size:.82rem;color:{{ col }}">{{ cat }}</span>
+          <span style="font-size:.78rem;color:{{ col }};opacity:.8;font-weight:600">{{ range_ }}</span>
+        </div>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-graph-up-arrow" style="color:#16a34a"></i> Weight &amp; BMI Trend</h3></div>
+    <div class="card-bd"><div class="chart-wrap"><canvas id="ch" height="210"></canvas></div></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-hd">
+    <h3><i class="bi bi-table" style="color:var(--blue)"></i> All BMI Records</h3>
+    <span style="font-size:.8rem;color:var(--text3);font-weight:600">{{ records|length }} records</span>
+  </div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Date &amp; Time</th><th>Height</th><th>Weight</th><th>BMI</th><th>Category</th><th>Risk Level</th><th>Notes</th><th></th></tr></thead>
+    <tbody>{% for rec in records %}<tr>
+      <td>{{ rec.recorded_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+      <td>{{ rec.height_cm }} cm</td><td>{{ rec.weight_kg }} kg</td>
+      <td><strong style="color:#16a34a">{{ rec.bmi_value }}</strong></td>
+      <td style="color:var(--text2)">{{ rec.category }}</td>
+      <td><span class="rb rb-{{ rec.risk_level }}">{{ rec.risk_level|capitalize }}</span></td>
+      <td style="color:var(--text3);font-size:.82rem">{{ rec.notes or '—' }}</td>
+      <td><form method="POST" action="{{ url_for('del_bmi',id=rec.id) }}" onsubmit="return confirm('Delete?')"><button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button></form></td>
+    </tr>{% else %}<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:36px">No records yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const labels={{ labels|safe }},bmiData={{ bmi_data|safe }},wtData={{ wt_data|safe }};
+if(labels.length>0){
+  new Chart(document.getElementById('ch'),{type:'line',data:{labels,datasets:[
+    {label:'BMI',data:bmiData,borderColor:'#16a34a',backgroundColor:'rgba(22,163,74,.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#16a34a',borderWidth:2.5},
+    {label:'Weight (kg)',data:wtData,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.05)',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#d97706',borderWidth:2,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},
+    scales:{x:{grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}},y:{beginAtZero:false,grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'BMI',color:'#94a3b8',font:{size:11}}},
+    y2:{beginAtZero:false,position:'right',grid:{drawOnChartArea:false},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'kg',color:'#94a3b8',font:{size:11}}}}}});
+} else {
+  document.getElementById('ch').closest('.chart-wrap').innerHTML='<div style="height:210px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.88rem;flex-direction:column;gap:9px"><i class="bi bi-graph-up" style="font-size:2rem;color:#b8dff2"></i>Add readings to see the trend chart.</div>';
+}
+</script>
+{% endblock %}

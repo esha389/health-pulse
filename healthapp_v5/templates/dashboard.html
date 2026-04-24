@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — Health Pulse{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block extra_css %}
+<style>
+.hero{
+  background:linear-gradient(135deg, #131a2f 0%, #2e4493 60%, #11a2d7 100%);
+  border-radius:18px; padding:28px 32px;
+  margin-bottom:24px; position:relative; overflow:hidden;
+  box-shadow:0 8px 32px rgba(46,68,147,.22);
+}
+.hero::before{content:'';position:absolute;top:-60px;right:-40px;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%}
+.hero::after{content:'';position:absolute;bottom:-70px;right:140px;width:180px;height:180px;background:rgba(17,162,215,.12);border-radius:50%}
+.hero-inner{position:relative;z-index:1}
+.hero-name{font-size:1.65rem;font-weight:800;color:#fff;letter-spacing:-.03em;margin-bottom:4px}
+.hero-sub{font-size:.87rem;color:rgba(255,255,255,.55)}
+.hero-badges{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.hero-badge{
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  border-radius:12px;padding:12px 18px;text-align:center;min-width:104px;
+  backdrop-filter:blur(4px);transition:background .18s;
+}
+.hero-badge:hover{background:rgba(255,255,255,.18)}
+.hero-badge .hb-val{font-size:1.4rem;font-weight:800;display:block;color:#fff;line-height:1}
+.hero-badge .hb-lbl{font-size:.67rem;color:rgba(255,255,255,.5);display:block;margin-top:4px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.upload-cta{
+  background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);
+  border-radius:12px;padding:10px 20px;color:#fff;text-decoration:none;
+  font-weight:700;font-size:.86rem;
+  display:inline-flex;align-items:center;gap:8px;transition:all .2s;
+}
+.upload-cta:hover{background:rgba(255,255,255,.25);transform:translateY(-1px)}
+.report-row{
+  display:flex;align-items:center;gap:13px;
+  padding:13px 22px;border-bottom:1px solid var(--border2);
+  text-decoration:none;color:inherit;transition:background .14s;
+}
+.report-row:hover{background:var(--sky-lt)}
+.report-row:last-child{border-bottom:none}
+.rr-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.15rem;flex-shrink:0;background:var(--sky-lt);border:1px solid var(--sky-md)}
+.reminder-dot{width:9px;height:9px;background:var(--warn);border-radius:50%;flex-shrink:0;box-shadow:0 0 6px rgba(217,119,6,.4)}
+.chart-empty{height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text4);gap:8px}
+.chart-empty i{font-size:2rem;color:var(--sky-md)}
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-inner">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:6px;font-weight:500">
+          {{ 'Good morning' if now.hour < 12 else ('Good afternoon' if now.hour < 17 else 'Good evening') }},
+        </div>
+        <div class="hero-name">{{ current_user.name }}</div>
+        <div class="hero-sub">{{ now.strftime('%A, %d %B %Y') }}</div>
+      </div>
+      <a href="{{ url_for('upload') }}" class="upload-cta">
+        <i class="bi bi-cloud-arrow-up-fill"></i>Upload Lab Report
+      </a>
+    </div>
+    <div class="hero-badges">
+      <div class="hero-badge">
+        <span class="hb-val"><span class="rb rb-{{ risk }}" style="font-size:.68rem">{{ risk|upper }}</span></span>
+        <span class="hb-lbl">Overall Risk</span>
+      </div>
+      <div class="hero-badge">
+        <span class="hb-val">{{ total_reports }}</span>
+        <span class="hb-lbl">Lab Reports</span>
+      </div>
+      {% if lt and lt.tsh %}
+      <div class="hero-badge">
+        <span class="hb-val">{{ lt.tsh }}</span>
+        <span class="hb-lbl">TSH µIU/mL</span>
+      </div>{% endif %}
+      {% if lb %}
+      <div class="hero-badge">
+        <span class="hb-val">{{ lb.systolic }}/{{ lb.diastolic }}</span>
+        <span class="hb-lbl">BP (mmHg)</span>
+      </div>{% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Stat cards -->
+<div class="g4" style="margin-bottom:22px">
+  <div class="stat">
+    <div class="stat-accent" style="background:linear-gradient(90deg,#dc2626,#e11d48)"></div>
+    <div class="ic-box" style="background:#fee2e2"><i class="bi bi-heart-fill" style="color:#dc2626;font-size:1.3rem"></i></div>
+    <div class="lbl">Blood Pressure</div>
+    {% if lb %}
+    <div class="val" style="color:#dc2626;font-size:1.6rem">{{ lb.systolic }}/{{ lb.diastolic }}</div>
+    <div class="sub">mmHg &nbsp;<span class="rb rb-{{ lb.risk_level }}">{{ lb.risk_level }}</span></div>
+    {% else %}
+    <div class="val" style="font-size:1.1rem;color:var(--text4)">No data yet</div>
+    <div class="sub"><a href="{{ url_for('blood_pressure') }}" style="color:var(--blue);font-weight:700">Add first reading →</a></div>
+    {% endif %}
+  </div>
+
+  <div class="stat">
+    <div class="stat-accent" style="background:linear-gradient(90deg,#d97706,#f59e0b)"></div>
+    <div class="ic-box" style="background:#fef3c7"><i class="bi bi-droplet-fill" style="color:#d97706;font-size:1.3rem"></i></div>
+    <div class="lbl">Blood Sugar</div>
+    {% if ld %}
+    <div class="val" style="color:#d97706;font-size:1.6rem">{{ ld.fasting_glucose or ld.hba1c }}</div>
+    <div class="sub">{{ 'mg/dL' if ld.fasting_glucose else 'HbA1c %' }} &nbsp;<span class="rb rb-{{ ld.risk_level }}">{{ ld.risk_level }}</span></div>
+    {% else %}
+    <div class="val" style="font-size:1.1rem;color:var(--text4)">No data yet</div>
+    <div class="sub"><a href="{{ url_for('diabetes') }}" style="color:var(--blue);font-weight:700">Add reading →</a></div>
+    {% endif %}
+  </div>
+
+  <div class="stat">
+    <div class="stat-accent" style="background:linear-gradient(90deg,#7c3aed,#8b5cf6)"></div>
+    <div class="ic-box" style="background:#ede9fe"><i class="bi bi-activity" style="color:#7c3aed;font-size:1.3rem"></i></div>
+    <div class="lbl">Thyroid TSH</div>
+    {% if lt %}
+    <div class="val" style="color:#7c3aed;font-size:1.6rem">{{ lt.tsh or 'N/A' }}</div>
+    <div class="sub">µIU/mL &nbsp;<span class="rb rb-{{ lt.risk_level }}">{{ lt.risk_level }}</span></div>
+    {% else %}
+    <div class="val" style="font-size:1.1rem;color:var(--text4)">No data yet</div>
+    <div class="sub"><a href="{{ url_for('thyroid') }}" style="color:var(--blue);font-weight:700">Upload report →</a></div>
+    {% endif %}
+  </div>
+
+  <div class="stat">
+    <div class="stat-accent" style="background:linear-gradient(90deg,#16a34a,#22c55e)"></div>
+    <div class="ic-box" style="background:#dcfce7"><i class="bi bi-person-standing" style="color:#16a34a;font-size:1.3rem"></i></div>
+    <div class="lbl">BMI</div>
+    {% if lbmi %}
+    <div class="val" style="color:#16a34a;font-size:1.6rem">{{ lbmi.bmi_value }}</div>
+    <div class="sub">{{ lbmi.category }} &nbsp;<span class="rb rb-{{ lbmi.risk_level }}">{{ lbmi.risk_level }}</span></div>
+    {% else %}
+    <div class="val" style="font-size:1.1rem;color:var(--text4)">No data yet</div>
+    <div class="sub"><a href="{{ url_for('bmi') }}" style="color:var(--blue);font-weight:700">Calculate →</a></div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Charts -->
+<div class="g2" style="margin-bottom:22px">
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-heart-fill" style="color:#dc2626"></i> Blood Pressure Trend</h3>
+      <a href="{{ url_for('blood_pressure') }}" class="btn btn-o btn-sm">Add Reading</a>
+    </div>
+    <div class="card-bd">
+      <div class="chart-wrap"><canvas id="bpChart" height="160"></canvas></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-activity" style="color:#7c3aed"></i> TSH Trend</h3>
+      <a href="{{ url_for('thyroid') }}" class="btn btn-o btn-sm">Add Reading</a>
+    </div>
+    <div class="card-bd">
+      <div class="chart-wrap"><canvas id="thChart" height="160"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom row -->
+<div class="g2">
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-folder2-open" style="color:var(--sky)"></i> Recent Lab Reports</h3>
+      <a href="{{ url_for('vault') }}" class="btn btn-o btn-sm">View All</a>
+    </div>
+    {% if recent_uploads %}
+      {% for r in recent_uploads %}
+      <a href="{{ url_for('report_detail',rid=r.id) }}" class="report-row">
+        <div class="rr-icon">{{ r.icon }}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-weight:700;font-size:.88rem;color:var(--text)">{{ r.label }}</div>
+          <div style="font-size:.74rem;color:var(--text3);margin-top:1px">{{ r.lab_name or 'Lab' }} &middot; {{ r.display_date.strftime('%d %b %Y') }}</div>
+        </div>
+        {% if r.auto_saved %}
+        <span style="font-size:.65rem;background:var(--ok-lt);color:#15803d;border-radius:8px;padding:3px 9px;font-weight:800;border:1px solid #bbf7d0">&#10003; Saved</span>
+        {% endif %}
+      </a>{% endfor %}
+    {% else %}
+    <div style="padding:40px 24px;text-align:center">
+      <i class="bi bi-cloud-arrow-up" style="font-size:2.5rem;color:var(--sky-md)"></i>
+      <p style="color:var(--text3);font-size:.86rem;margin-top:10px">No reports uploaded yet.</p>
+      <a href="{{ url_for('upload') }}" style="color:var(--blue);font-weight:700;font-size:.84rem">Upload your first report →</a>
+    </div>{% endif %}
+    <div style="padding:14px 22px;border-top:1px solid var(--border2)">
+      <a href="{{ url_for('upload') }}" class="btn btn-p" style="width:100%;justify-content:center">
+        <i class="bi bi-cloud-arrow-up-fill"></i>Upload New Report
+      </a>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:18px">
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="bi bi-bell-fill" style="color:var(--warn)"></i> Upcoming Reminders</h3>
+        <a href="{{ url_for('reminders') }}" class="btn btn-o btn-sm">Manage</a>
+      </div>
+      {% if pending_reminders %}
+        {% for r in pending_reminders %}
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 22px;border-bottom:1px solid var(--border2)">
+          <div class="reminder-dot"></div>
+          <div style="flex:1">
+            <div style="font-weight:700;font-size:.86rem;color:var(--text)">{{ r.title }}</div>
+            <div style="font-size:.73rem;color:var(--text3);margin-top:1px">{{ r.due_date.strftime('%d %b, %I:%M %p') if r.due_date }}</div>
+          </div>
+          <span style="font-size:.65rem;background:var(--warn-lt);color:var(--warn);border-radius:8px;padding:3px 9px;font-weight:700;border:1px solid #fde68a">{{ r.reminder_type|capitalize }}</span>
+        </div>{% endfor %}
+      {% else %}
+      <div style="padding:20px 24px;text-align:center;color:var(--text3);font-size:.85rem">No pending reminders.</div>
+      {% endif %}
+    </div>
+
+    {% if updates %}
+    <div class="card">
+      <div class="card-hd"><h3><i class="bi bi-stars" style="color:var(--sky)"></i> What's New</h3></div>
+      {% for u in updates %}
+      <div style="padding:12px 22px;border-bottom:1px solid var(--border2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          {% if u.update_type=='feature' %}<span style="background:var(--sky-lt);color:var(--blue);border-radius:6px;padding:2px 8px;font-size:.63rem;font-weight:800">FEATURE</span>
+          {% elif u.update_type=='fix' %}<span style="background:var(--danger-lt);color:var(--danger);border-radius:6px;padding:2px 8px;font-size:.63rem;font-weight:800">FIX</span>
+          {% else %}<span style="background:var(--purple-lt);color:var(--purple);border-radius:6px;padding:2px 8px;font-size:.63rem;font-weight:800">NEWS</span>{% endif %}
+          {% if u.version %}<span style="font-size:.64rem;color:var(--text3)">v{{ u.version }}</span>{% endif %}
+        </div>
+        <div style="font-weight:700;font-size:.85rem;color:var(--text)">{{ u.title }}</div>
+        {% if u.body %}<div style="font-size:.76rem;color:var(--text3);margin-top:2px">{{ u.body[:80] }}{{ '…' if u.body|length>80 }}</div>{% endif %}
+      </div>{% endfor %}
+    </div>{% endif %}
+
+    <a href="{{ url_for('doctor_view') }}" class="btn btn-teal" target="_blank" style="justify-content:center;padding:14px;font-size:.9rem">
+      <i class="bi bi-person-badge-fill"></i>Open Doctor View
+    </a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const bpLabels = {{ bp_labels|safe }};
+const bpSys   = {{ bp_sys|safe }};
+const bpDia   = {{ bp_dia|safe }};
+const thLabels = {{ th_labels|safe }};
+const thTsh   = {{ th_tsh|safe }};
+
+const baseOpts = {
+  responsive:true, maintainAspectRatio:true,
+  plugins:{ legend:{ position:'top' } },
+  scales:{
+    x:{ grid:{ color:'#e5f3fa' }, ticks:{ color:'#64748b', font:{size:11} } },
+    y:{ grid:{ color:'#e5f3fa' }, ticks:{ color:'#64748b', font:{size:11} } }
+  }
+};
+
+if (bpLabels.length > 0) {
+  new Chart(document.getElementById('bpChart'), {
+    type:'line',
+    data:{
+      labels:bpLabels,
+      datasets:[
+        { label:'Systolic', data:bpSys, borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,.07)', tension:.4, fill:true, pointRadius:4, pointBackgroundColor:'#dc2626', borderWidth:2.5 },
+        { label:'Diastolic', data:bpDia, borderColor:'#2e4493', backgroundColor:'rgba(46,68,147,.07)', tension:.4, fill:true, pointRadius:4, pointBackgroundColor:'#2e4493', borderWidth:2.5 }
+      ]
+    },
+    options:{ ...baseOpts, scales:{ ...baseOpts.scales, y:{ ...baseOpts.scales.y, min:40 } } }
+  });
+} else {
+  document.getElementById('bpChart').closest('.chart-wrap').innerHTML = '<div class="chart-empty"><i class="bi bi-bar-chart-line"></i><span>Add blood pressure readings to see the trend chart.</span></div>';
+}
+
+if (thLabels.length > 0) {
+  new Chart(document.getElementById('thChart'), {
+    type:'line',
+    data:{
+      labels:thLabels,
+      datasets:[
+        { label:'TSH', data:thTsh, borderColor:'#7c3aed', backgroundColor:'rgba(124,58,237,.07)', tension:.4, fill:true, pointRadius:4, pointBackgroundColor:'#7c3aed', borderWidth:2.5 }
+      ]
+    },
+    options:{ ...baseOpts, scales:{ ...baseOpts.scales, y:{ ...baseOpts.scales.y, min:0 } } }
+  });
+} else {
+  document.getElementById('thChart').closest('.chart-wrap').innerHTML = '<div class="chart-empty"><i class="bi bi-bar-chart-line"></i><span>Add thyroid readings to see the trend chart.</span></div>';
+}
+</script>
+{% endblock %}

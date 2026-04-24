@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Diabetes — Health Pulse{% endblock %}
+{% block page_title %}Diabetes &amp; Blood Sugar Tracker{% endblock %}
+{% block content %}
+<div class="g2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-droplet-fill" style="color:#d97706"></i> Add New Reading</h3>
+      <div><span class="rc">Fasting Normal &lt; 100</span><span class="rc">HbA1c Normal &lt; 5.7%</span></div>
+    </div>
+    <div class="card-bd">
+      <form method="POST">
+        <div class="fg">
+          <label>Fasting Glucose (mg/dL)</label>
+          <input type="number" name="fasting_glucose" class="fc" placeholder="e.g. 95" step="0.1" min="20" max="600">
+          <div class="fh">Normal: below 100 &nbsp;·&nbsp; Pre-diabetic: 100–125 &nbsp;·&nbsp; Diabetic: 126 or above</div>
+        </div>
+        <div class="fg">
+          <label>Post-Meal Glucose (mg/dL)</label>
+          <input type="number" name="postprandial_glucose" class="fc" placeholder="e.g. 130" step="0.1" min="20" max="600">
+          <div class="fh">Normal: below 140 &nbsp;·&nbsp; Pre-diabetic: 140–199 &nbsp;·&nbsp; Diabetic: 200 or above</div>
+        </div>
+        <div class="fg">
+          <label>HbA1c (%)</label>
+          <input type="number" name="hba1c" class="fc" placeholder="e.g. 5.4" step="0.1" min="2" max="20">
+          <div class="fh">Normal: below 5.7% &nbsp;·&nbsp; Pre-diabetic: 5.7–6.4% &nbsp;·&nbsp; Diabetic: 6.5% or above</div>
+        </div>
+        <div class="fg">
+          <label>Notes</label>
+          <input type="text" name="notes" class="fc" placeholder="Fasting hours, medication taken, etc.">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-p"><i class="bi bi-floppy-fill"></i> Save Reading</button>
+          <a href="{{ url_for('upload') }}" class="btn btn-a"><i class="bi bi-cloud-arrow-up-fill"></i> Upload Report</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-graph-up-arrow" style="color:#d97706"></i> Blood Sugar Trend</h3></div>
+    <div class="card-bd"><div class="chart-wrap"><canvas id="ch" height="200"></canvas></div></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-hd">
+    <h3><i class="bi bi-table" style="color:var(--blue)"></i> All Diabetes Records</h3>
+    <span style="font-size:.8rem;color:var(--text3);font-weight:600">{{ records|length }} records</span>
+  </div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Date &amp; Time</th><th>Fasting</th><th>Post-Meal</th><th>HbA1c</th><th>Risk Level</th><th>Source</th><th>Notes</th><th></th></tr></thead>
+    <tbody>{% for rec in records %}<tr>
+      <td>{{ rec.recorded_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+      <td>{{ rec.fasting_glucose or '—' }}{% if rec.fasting_glucose %} <span style="color:var(--text4);font-size:.8rem">mg/dL</span>{% endif %}</td>
+      <td>{{ rec.postprandial_glucose or '—' }}{% if rec.postprandial_glucose %} <span style="color:var(--text4);font-size:.8rem">mg/dL</span>{% endif %}</td>
+      <td>{{ rec.hba1c or '—' }}{% if rec.hba1c %}<span style="color:var(--text4);font-size:.8rem">%</span>{% endif %}</td>
+      <td><span class="rb rb-{{ rec.risk_level }}">{{ rec.risk_level|capitalize }}</span></td>
+      <td><span class="src-chip src-{{ rec.source or 'manual' }}">{{ (rec.source or 'manual')|title }}</span></td>
+      <td style="color:var(--text3);font-size:.82rem">{{ rec.notes or '—' }}</td>
+      <td><form method="POST" action="{{ url_for('del_dm',id=rec.id) }}" onsubmit="return confirm('Delete?')"><button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button></form></td>
+    </tr>{% else %}<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:36px">No records yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const labels={{ labels|safe }},fastData={{ fast_data|safe }},a1cData={{ a1c_data|safe }};
+if(labels.length>0){
+  new Chart(document.getElementById('ch'),{type:'line',data:{labels,datasets:[
+    {label:'Fasting Glucose (mg/dL)',data:fastData,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#d97706',borderWidth:2.5},
+    {label:'HbA1c (%)',data:a1cData,borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,.05)',tension:.4,fill:false,pointRadius:5,pointBackgroundColor:'#dc2626',borderWidth:2,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},
+    scales:{x:{grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}},y:{beginAtZero:false,grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'mg/dL',color:'#94a3b8',font:{size:11}}},
+    y2:{beginAtZero:false,position:'right',grid:{drawOnChartArea:false},ticks:{color:'#64748b',font:{size:11}},title:{display:true,text:'HbA1c %',color:'#94a3b8',font:{size:11}}}}}});
+} else {
+  document.getElementById('ch').closest('.chart-wrap').innerHTML='<div style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.88rem;flex-direction:column;gap:9px"><i class="bi bi-graph-up" style="font-size:2rem;color:#b8dff2"></i>Add readings to see the trend chart.</div>';
+}
+</script>
+{% endblock %}

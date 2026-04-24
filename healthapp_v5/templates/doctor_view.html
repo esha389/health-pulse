@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{ current_user.name }} — Health Reports</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus Jakarta Sans:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--blue);min-height:100vh}
+.topbar{background:linear-gradient(135deg,var(--blue),var(--ok));color:#fff;padding:18px 22px;
+  display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:100;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.topbar h1{font-family:'Plus Jakarta Sans';font-size:1.2rem;font-weight:700}
+.topbar p{font-size:.77rem;opacity:.8;margin-top:2px}
+.back{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 13px;border-radius:8px;text-decoration:none;font-size:.78rem}
+.content{padding:18px;max-width:860px;margin:0 auto}
+.month-sec{color:#fff;font-family:'Plus Jakarta Sans';font-size:.82rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  display:flex;align-items:center;gap:9px;padding:16px 0 9px;border-bottom:1px solid rgba(255,255,255,.12);margin-bottom:12px}
+.month-sec .ct{background:rgba(255,255,255,.12);padding:2px 9px;border-radius:20px;font-family:'DM Sans';font-size:.68rem}
+.rcard{background:#fff;border-radius:14px;overflow:hidden;margin-bottom:13px;box-shadow:0 4px 20px rgba(0,0,0,.14)}
+.rc-hd{padding:13px 16px;display:flex;justify-content:space-between;align-items:flex-start;background:linear-gradient(135deg,#f0f9ff,#e0f7f5)}
+.rc-icon{font-size:1.8rem;margin-bottom:5px}.rc-type{font-family:'Plus Jakarta Sans';font-weight:700;font-size:.87rem;color:var(--blue)}
+.rc-lab{font-size:.72rem;color:#718096}.rc-date{font-size:.75rem;font-weight:600;color:#2d3748;text-align:right}
+.rc-body{padding:13px 16px}
+.vals{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:9px}
+.vpill{background:#f0f4f8;border-radius:8px;padding:6px 11px;font-size:.78rem;font-weight:600;color:#2d3748}
+.vpill span{display:block;font-size:.63rem;color:#718096;font-weight:400}
+.vpill.flag{background:#fef3c7;color:#92400e}
+.summary{font-size:.78rem;color:#4a5568;line-height:1.7;background:#f7fafc;border-left:3px solid var(--ok);padding:9px 13px;border-radius:0 8px 8px 0}
+.toggle-btn{display:inline-flex;align-items:center;gap:5px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:6px 13px;font-size:.75rem;cursor:pointer;margin-top:8px;text-decoration:none;font-family:'DM Sans'}
+.frame{display:none;margin-top:11px;border-radius:10px;overflow:hidden}
+.frame.open{display:block}
+.frame iframe{width:100%;height:480px;border:none}
+.frame img{width:100%;height:auto}
+.empty{text-align:center;color:rgba(255,255,255,.55);padding:48px 20px;font-size:.95rem}
+.disclaimer{text-align:center;color:rgba(255,255,255,.35);font-size:.7rem;padding:18px;font-style:italic}
+@media print{.topbar{position:relative}.toggle-btn{display:none}.frame{display:block !important}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>💚 {{ current_user.name }}'s Health Reports</h1>
+    <p>For doctor visit · {{ now.strftime('%d %B %Y') }}</p>
+  </div>
+  <div style="display:flex;gap:9px;align-items:center">
+    <button onclick="window.print()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:6px 13px;border-radius:8px;font-size:.78rem;cursor:pointer">🖨️ Print</button>
+    <a href="{{ url_for('vault') }}" class="back">← App</a>
+  </div>
+</div>
+
+<div class="content">
+{% if reports %}
+  {% set ns=namespace(last='') %}
+  {% for r in reports %}
+    {% set month=r.display_date.strftime('%B %Y') %}
+    {% if month!=ns.last %}{% set ns.last=month %}
+    <div class="month-sec">📅 {{ month }}<span class="ct">{{ reports|selectattr('display_date','defined')|list|length }}</span></div>
+    {% endif %}
+    {% set d=r.data %}
+    <div class="rcard">
+      <div class="rc-hd">
+        <div>
+          <div class="rc-icon">{{ r.icon }}</div>
+          <div class="rc-type">{{ r.label }}</div>
+          <div class="rc-lab">{{ r.lab_name or 'Lab' }}{% if r.referring_doctor %} · Ref: {{ r.referring_doctor }}{% endif %}</div>
+          {% if r.reg_id %}<div class="rc-lab" style="font-size:.67rem;font-family:monospace">ID: {{ r.reg_id }}</div>{% endif %}
+        </div>
+        <div class="rc-date">{{ r.display_date.strftime('%d %b %Y') }}<br>
+        {% if r.auto_saved %}<span style="font-size:.65rem;background:#dcfce7;color:#166534;border-radius:10px;padding:1px 7px;font-weight:600">✓ Saved</span>{% endif %}</div>
+      </div>
+      <div class="rc-body">
+        {% set dvals = d.get('values') or {} %}
+        {% set dunits = d.get('units') or {} %}
+        {% set dflags = d.get('abnormal_flags') or [] %}
+        {% if dvals %}
+        <div class="vals">
+          {% for k,v in dvals.items() %}{% if v is not none and v is not string and v!=true and v!=false %}
+          <div class="vpill {% for f in dflags %}{% if k|upper in f %}flag{% endif %}{% endfor %}">
+            {{ v }}<span>{{ k|replace('_',' ')|upper }}{% if dunits.get(k) %} ({{ dunits[k] }}){% endif %}</span>
+          </div>
+          {% endif %}{% endfor %}
+        </div>{% endif %}
+        {% if dflags %}
+        <div style="margin-bottom:9px">{% for f in dflags %}<div style="font-size:.74rem;color:#92400e;background:#fef3c7;border-radius:6px;padding:4px 9px;margin-bottom:4px">⚠️ {{ f }}</div>{% endfor %}</div>{% endif %}
+        {% if r.ai_summary %}<div class="summary">{{ r.ai_summary }}</div>{% endif %}
+        <button class="toggle-btn" onclick="toggle({{ r.id }})">📄 View Full Report</button>
+        <div class="frame" id="fr{{ r.id }}">
+          {% if r.file_type=='pdf' %}<iframe src="{{ url_for('serve_file',rid=r.id) }}"></iframe>
+          {% else %}<img src="{{ url_for('serve_file',rid=r.id) }}" alt="Report">{% endif %}
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+{% else %}
+<div class="empty">🗂️ No reports uploaded yet.<br><small>Upload lab reports from the app and they'll appear here.</small></div>
+{% endif %}
+<div class="disclaimer">Generated by Health Pulse · For informational purposes only · Always consult a qualified medical professional</div>
+</div>
+<script>function toggle(id){const el=document.getElementById('fr'+id);el.classList.toggle('open')}</script>
+</body>
+</html>

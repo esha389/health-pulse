@@ -1,0 +1,12 @@
+# Core — required
+Flask>=3.0.0
+Flask-SQLAlchemy>=3.1.1
+Flask-Login>=0.6.3
+Werkzeug>=3.0.1
+pdfplumber>=0.10.0
+Pillow>=10.0.0
+fpdf2>=2.7.9
+python-dotenv>=1.0.0
+
+# Optional — only needed for AI Insights with Gemini (free key at aistudio.google.com)
+# google-generativeai>=0.8.0

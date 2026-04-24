@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Report Vault{% endblock %}
+{% block page_title %}Report Vault{% endblock %}
+{% block extra_css %}
+<style>
+.filter-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid var(--border);border-radius:var(--r);padding:12px 16px;margin-bottom:18px;box-shadow:var(--sh)}
+.chip{padding:5px 13px;border-radius:20px;font-size:.72rem;font-weight:700;cursor:pointer;text-decoration:none;border:1.5px solid var(--border);color:var(--text2);transition:all .15s;background:#fff;white-space:nowrap}
+.chip:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-lt)}
+.chip.on{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.yr-chip.on{background:var(--purple);border-color:var(--purple);color:#fff}
+.yr-chip:hover{border-color:var(--purple);color:var(--purple);background:var(--purple-lt)}
+.divider{width:1px;height:22px;background:var(--border)}
+
+.yr-section{margin-bottom:28px}
+.yr-head{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.yr-badge{background:linear-gradient(135deg,var(--indigo),var(--purple));color:#fff;border-radius:10px;padding:5px 14px;font-size:.88rem;font-weight:800;box-shadow:0 3px 10px rgba(91,106,240,.3)}
+.yr-line{flex:1;height:1px;background:var(--border)}
+.yr-count{font-size:.74rem;color:var(--text3);font-weight:600}
+
+.mo-head{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.mo-head::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;margin-bottom:20px}
+.rcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all .2s;text-decoration:none;color:inherit;display:block;box-shadow:var(--sh)}
+.rcard:hover{border-color:var(--indigo);box-shadow:var(--sh-md);transform:translateY(-3px)}
+.rc-top{padding:14px 16px;background:linear-gradient(135deg,var(--indigo-lt),var(--purple-lt));border-bottom:1px solid var(--border)}
+.rc-icon{font-size:1.7rem;margin-bottom:6px}
+.rc-type{font-weight:800;font-size:.81rem;color:var(--text)}
+.rc-lab{font-size:.69rem;color:var(--text3);margin-top:1px}
+.rc-body{padding:12px 16px}
+.rc-date{font-size:.73rem;color:var(--text2);font-weight:700;margin-bottom:4px}
+.rc-vals{font-size:.68rem;color:var(--text3);line-height:1.7}
+.rc-badges{margin-top:6px;display:flex;flex-wrap:wrap;gap:4px}
+.rc-badge{font-size:.6rem;border-radius:8px;padding:2px 7px;font-weight:800}
+.rc-saved{background:var(--teal-lt);color:#0C7A56}
+.rc-flag{background:var(--amber-lt);color:#7B5C00}
+.rc-foot{font-size:.65rem;color:var(--text3);margin-top:7px}
+
+.empty-state{text-align:center;padding:64px 28px;background:#fff;border-radius:var(--r);border:2px dashed var(--border)}
+.empty-ic{font-size:4rem;display:block;margin-bottom:16px}
+</style>
+{% endblock %}
+{% block content %}
+
+<!-- Stats -->
+<div class="g4" style="margin-bottom:18px">
+  <div class="stat">
+    <div class="stat-accent" style="background:linear-gradient(90deg,var(--indigo),var(--purple))"></div>
+    <div class="ic-box" style="background:var(--indigo-lt)"><i class="bi bi-folder2-open" style="color:var(--indigo);font-size:1.2rem"></i></div>
+    <div class="lbl">Total Reports</div><div class="val" style="color:var(--indigo)">{{ total }}</div>
+    <div class="sub">all uploaded files</div>
+  </div>
+  {% for t,ic,col,lt in [('thyroid','bi-activity','var(--purple)','var(--purple-lt)'),('blood_pressure','bi-heart-pulse','var(--red)','var(--red-lt)'),('diabetes','bi-droplet-half','var(--amber)','var(--amber-lt)')] %}
+  {% if counts.get(t,0)>0 %}
+  <div class="stat">
+    <div class="stat-accent" style="background:{{ col }}"></div>
+    <div class="ic-box" style="background:{{ lt }}"><i class="bi {{ ic }}" style="color:{{ col }};font-size:1.2rem"></i></div>
+    <div class="lbl">{{ t|replace('_',' ')|title }}</div>
+    <div class="val" style="color:{{ col }};font-size:1.5rem">{{ counts.get(t,0) }}</div>
+    <div class="sub">reports</div>
+  </div>{% endif %}{% endfor %}
+</div>
+
+<!-- Filter bar -->
+<div class="filter-row">
+  <span style="font-size:.68rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Type:</span>
+  <a href="{{ url_for('vault',type='all',year=fyear) }}" class="chip {% if ftype=='all' %}on{% endif %}">All ({{ total }})</a>
+  {% for t,lbl in [('thyroid','🔬 Thyroid'),('blood_pressure','❤️ BP'),('diabetes','🩸 Diabetes'),('bmi','⚖️ BMI'),('lipid','🫀 Lipid'),('cbc','🔴 CBC'),('liver','🟤 Liver'),('kidney','💧 Kidney'),('other','📄 Other')] %}
+  {% if counts.get(t,0)>0 %}<a href="{{ url_for('vault',type=t,year=fyear) }}" class="chip {% if ftype==t %}on{% endif %}">{{ lbl }}</a>{% endif %}{% endfor %}
+
+  {% if years %}
+  <div class="divider"></div>
+  <span style="font-size:.68rem;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Year:</span>
+  <a href="{{ url_for('vault',type=ftype,year='all') }}" class="chip yr-chip {% if fyear=='all' %}on{% endif %}">All</a>
+  {% for yr in years %}<a href="{{ url_for('vault',type=ftype,year=yr) }}" class="chip yr-chip {% if fyear|string==yr|string %}on{% endif %}">{{ yr }}</a>{% endfor %}
+  {% endif %}
+
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <a href="{{ url_for('upload') }}" class="btn btn-p btn-sm"><i class="bi bi-cloud-upload"></i> Upload</a>
+    <a href="{{ url_for('doctor_view') }}" class="btn btn-teal btn-sm" target="_blank"><i class="bi bi-hospital"></i> Doctor View</a>
+  </div>
+</div>
+
+{% if grouped %}
+  {% for yr in grouped.keys()|sort(reverse=True) %}
+  <div class="yr-section">
+    <div class="yr-head">
+      <span class="yr-badge"><i class="bi bi-calendar3"></i> {{ yr }}</span>
+      <div class="yr-line"></div>
+      <span class="yr-count">{{ grouped[yr].values()|sum(start=[])|length }} report(s)</span>
+    </div>
+    {% for month, rpts in grouped[yr].items() %}
+    <div class="mo-head"><i class="bi bi-calendar-event"></i> {{ month }}</div>
+    <div class="rgrid">
+      {% for r in rpts %}
+      <a href="{{ url_for('report_detail',rid=r.id) }}" class="rcard">
+        <div class="rc-top">
+          <div class="rc-icon">{{ r.icon }}</div>
+          <div class="rc-type">{{ r.label }}</div>
+          <div class="rc-lab">{{ r.lab_name or 'Unknown Lab' }}</div>
+        </div>
+        <div class="rc-body">
+          <div class="rc-date"><i class="bi bi-calendar3"></i> {{ r.display_date.strftime('%d %b %Y') }}</div>
+          {% set d=r.data %}
+          {% set rvals=d.get('values') or {} %}
+          {% set runits=d.get('units') or {} %}
+          {% if rvals %}
+          <div class="rc-vals">
+            {% set ns=namespace(c=0) %}
+            {% for k,v in rvals.items() %}{% if v is not none and v is not string and v!=true and v!=false and ns.c<4 %}{% set ns.c=ns.c+1 %}<strong>{{ k|upper }}:</strong> {{ v }}{% if runits.get(k) %}<span style="opacity:.6"> {{ runits[k] }}</span>{% endif %} &nbsp;{% endif %}{% endfor %}
+          </div>{% endif %}
+          <div class="rc-badges">
+            {% if r.auto_saved %}<span class="rc-badge rc-saved">✓ Auto-saved</span>{% endif %}
+            {% set aflags=d.get('abnormal_flags') or [] %}
+            {% if aflags %}<span class="rc-badge rc-flag">⚠ {{ aflags|length }} flag(s)</span>{% endif %}
+          </div>
+          <div class="rc-foot"><i class="bi bi-file-earmark"></i> {{ r.file_type|upper }} · Uploaded {{ r.uploaded_at.strftime('%d %b') }}</div>
+        </div>
+      </a>{% endfor %}
+    </div>{% endfor %}
+  </div>{% endfor %}
+{% else %}
+<div class="empty-state">
+  <span class="empty-ic"><i class="bi bi-folder2-open" style="color:var(--border)"></i></span>
+  <h3 style="color:var(--text);margin-bottom:8px;font-weight:800">Vault is Empty</h3>
+  <p style="color:var(--text3);font-size:.85rem;margin-bottom:20px">Upload lab reports and they'll be organised here by year, month and type.</p>
+  <a href="{{ url_for('upload') }}" class="btn btn-p"><i class="bi bi-cloud-upload"></i> Upload First Report</a>
+</div>{% endif %}
+{% endblock %}

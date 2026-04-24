@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Thyroid — Health Pulse{% endblock %}
+{% block page_title %}Thyroid Tracker{% endblock %}
+{% block content %}
+<div class="g2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-activity" style="color:#7c3aed"></i> Add New Reading</h3>
+      <a href="{{ url_for('upload') }}" class="btn btn-p btn-sm"><i class="bi bi-cloud-arrow-up-fill"></i> Upload Report</a>
+    </div>
+    <div class="card-bd">
+      <div style="background:var(--sky-lt);border:1px solid var(--sky-md);border-radius:12px;padding:12px 15px;margin-bottom:18px;font-size:.82rem;color:var(--blue)">
+        <i class="bi bi-lightbulb-fill" style="color:var(--warn)"></i>
+        <strong> Tip:</strong> Upload your lab report PDF and the TSH, T3, and T4 values will be filled in automatically.
+      </div>
+      <form method="POST">
+        <div class="fg">
+          <label>TSH (µIU/mL)</label>
+          <input type="number" name="tsh" class="fc" placeholder="e.g. 2.5" step="0.001" min="0" max="200">
+          <div class="fh">Normal: 0.55–4.78 &nbsp;·&nbsp; High TSH = Hypothyroidism &nbsp;·&nbsp; Low TSH = Hyperthyroidism</div>
+        </div>
+        <div class="g2">
+          <div class="fg">
+            <label>T3 Total (ng/mL)</label>
+            <input type="number" name="t3" class="fc" placeholder="e.g. 1.35" step="0.01">
+            <div class="fh">Normal: 0.60–1.81</div>
+          </div>
+          <div class="fg">
+            <label>T4 Total (µg/dL)</label>
+            <input type="number" name="t4" class="fc" placeholder="e.g. 7.50" step="0.1">
+            <div class="fh">Normal: 3.2–12.6</div>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Notes</label>
+          <input type="text" name="notes" class="fc" placeholder="Lab name, current medication, etc.">
+        </div>
+        <button type="submit" class="btn btn-p"><i class="bi bi-floppy-fill"></i> Save Reading</button>
+      </form>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-graph-up-arrow" style="color:#7c3aed"></i> TSH Trend</h3></div>
+    <div class="card-bd"><div class="chart-wrap"><canvas id="ch" height="200"></canvas></div></div>
+  </div>
+</div>
+<div class="card">
+  <div class="card-hd">
+    <h3><i class="bi bi-table" style="color:var(--blue)"></i> All Thyroid Records</h3>
+    <span style="font-size:.8rem;color:var(--text3);font-weight:600">{{ records|length }} records</span>
+  </div>
+  <div style="overflow-x:auto"><table class="tbl">
+    <thead><tr><th>Date &amp; Time</th><th>TSH (µIU/mL)</th><th>T3 (ng/mL)</th><th>T4 (µg/dL)</th><th>Risk Level</th><th>Source</th><th>Notes</th><th></th></tr></thead>
+    <tbody>{% for rec in records %}<tr>
+      <td>{{ rec.recorded_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+      <td><strong style="color:{% if rec.tsh and (rec.tsh>4.78 or rec.tsh<0.55) %}#dc2626{% else %}#7c3aed{% endif %}">{{ rec.tsh or '—' }}</strong></td>
+      <td>{{ rec.t3 or '—' }}</td><td>{{ rec.t4 or '—' }}</td>
+      <td><span class="rb rb-{{ rec.risk_level }}">{{ rec.risk_level|capitalize }}</span></td>
+      <td><span class="chip-type src-{{ rec.source or 'manual' }}">{{ (rec.source or 'manual')|title }}</span></td>
+      <td style="color:var(--text3);font-size:.82rem;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ rec.notes or '—' }}</td>
+      <td><form method="POST" action="{{ url_for('del_th',id=rec.id) }}" onsubmit="return confirm('Delete?')"><button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button></form></td>
+    </tr>{% else %}<tr><td colspan="8" style="text-align:center;color:var(--text3);padding:36px">No records yet. Upload a lab report to auto-fill values.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const labels={{ labels|safe }},tshData={{ tsh_data|safe }},t3Data={{ t3_data|safe }},t4Data={{ t4_data|safe }};
+if(labels.length>0){
+  new Chart(document.getElementById('ch'),{type:'line',data:{labels,datasets:[
+    {label:'TSH',data:tshData,borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,.08)',tension:.4,fill:true,pointRadius:5,pointBackgroundColor:'#7c3aed',borderWidth:2.5},
+    {label:'T3',data:t3Data,borderColor:'#11a2d7',backgroundColor:'rgba(17,162,215,.05)',tension:.4,fill:false,pointRadius:4,pointBackgroundColor:'#11a2d7',borderWidth:2,yAxisID:'y2'},
+    {label:'T4',data:t4Data,borderColor:'#d97706',backgroundColor:'rgba(217,119,6,.05)',tension:.4,fill:false,pointRadius:4,pointBackgroundColor:'#d97706',borderWidth:2,yAxisID:'y2'}
+  ]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top'}},
+    scales:{x:{grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}},y:{beginAtZero:true,grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}},y2:{beginAtZero:true,position:'right',grid:{drawOnChartArea:false},ticks:{color:'#64748b',font:{size:11}}}}}});
+} else {
+  document.getElementById('ch').closest('.chart-wrap').innerHTML='<div style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.88rem;flex-direction:column;gap:9px"><i class="bi bi-graph-up" style="font-size:2rem;color:#b8dff2"></i>Add readings to see the trend chart.</div>';
+}
+</script>
+{% endblock %}

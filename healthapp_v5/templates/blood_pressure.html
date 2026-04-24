@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Blood Pressure — Health Pulse{% endblock %}
+{% block page_title %}Blood Pressure Tracker{% endblock %}
+{% block content %}
+<div class="g2" style="margin-bottom:20px">
+  <div class="card">
+    <div class="card-hd">
+      <h3><i class="bi bi-heart-fill" style="color:#dc2626"></i> Add New Reading</h3>
+      <div style="display:flex;gap:6px">
+        <span class="rc">Normal &lt; 120/80</span>
+        <span class="rc">High &gt; 140/90</span>
+      </div>
+    </div>
+    <div class="card-bd">
+      <form method="POST">
+        <div class="g2">
+          <div class="fg">
+            <label>Systolic — Upper (mmHg) *</label>
+            <input type="number" name="systolic" class="fc" placeholder="e.g. 120" min="60" max="250" required>
+            <div class="fh">Normal range: below 120 mmHg</div>
+          </div>
+          <div class="fg">
+            <label>Diastolic — Lower (mmHg) *</label>
+            <input type="number" name="diastolic" class="fc" placeholder="e.g. 80" min="40" max="150" required>
+            <div class="fh">Normal range: below 80 mmHg</div>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Pulse Rate (bpm)</label>
+          <input type="number" name="pulse" class="fc" placeholder="e.g. 72" min="30" max="200">
+          <div class="fh">Normal range: 60–100 bpm</div>
+        </div>
+        <div class="fg">
+          <label>Notes</label>
+          <input type="text" name="notes" class="fc" placeholder="Before or after medication, after exercise, etc.">
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-p"><i class="bi bi-floppy-fill"></i> Save Reading</button>
+          <a href="{{ url_for('upload') }}" class="btn btn-a"><i class="bi bi-cloud-arrow-up-fill"></i> Upload Report</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-graph-up-arrow" style="color:#dc2626"></i> Blood Pressure Trend (Last 10)</h3></div>
+    <div class="card-bd">
+      <div class="chart-wrap"><canvas id="ch" height="200"></canvas></div>
+    </div>
+  </div>
+</div>
+
+<!-- Reference table -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-hd"><h3><i class="bi bi-info-circle-fill" style="color:var(--sky)"></i> Blood Pressure Categories</h3></div>
+  <div class="card-bd" style="padding:14px 22px">
+    <div class="g4">
+      {% for cat,sys,dia,bg,col in [
+        ('Normal','Below 120','Below 80','#dcfce7','#15803d'),
+        ('Elevated','120–129','Below 80','#fef3c7','#b45309'),
+        ('Stage 1 Hypertension','130–139','80–89','#fee2e2','#b91c1c'),
+        ('Stage 2 Hypertension','140 or higher','90 or higher','#fef2f2','#991b1b')] %}
+      <div style="background:{{ bg }};border-radius:12px;padding:15px;text-align:center;border:1px solid rgba(0,0,0,.06)">
+        <div style="font-weight:800;font-size:.85rem;color:{{ col }};margin-bottom:6px">{{ cat }}</div>
+        <div style="font-size:.76rem;color:{{ col }};opacity:.75">Systolic: {{ sys }}</div>
+        <div style="font-size:.76rem;color:{{ col }};opacity:.75">Diastolic: {{ dia }}</div>
+      </div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-hd">
+    <h3><i class="bi bi-table" style="color:var(--blue)"></i> All Blood Pressure Records</h3>
+    <span style="font-size:.8rem;color:var(--text3);font-weight:600">{{ records|length }} records</span>
+  </div>
+  <div style="overflow-x:auto">
+    <table class="tbl">
+      <thead><tr><th>Date &amp; Time</th><th>Systolic</th><th>Diastolic</th><th>Pulse</th><th>Risk Level</th><th>Source</th><th>Notes</th><th></th></tr></thead>
+      <tbody>
+        {% for rec in records %}
+        <tr>
+          <td>{{ rec.recorded_at.strftime('%d %b %Y, %I:%M %p') }}</td>
+          <td><strong style="color:#dc2626">{{ rec.systolic }}</strong> <span style="color:var(--text4);font-size:.8rem">mmHg</span></td>
+          <td><strong style="color:var(--blue)">{{ rec.diastolic }}</strong> <span style="color:var(--text4);font-size:.8rem">mmHg</span></td>
+          <td>{{ rec.pulse or '—' }}</td>
+          <td><span class="rb rb-{{ rec.risk_level }}">{{ rec.risk_level|capitalize }}</span></td>
+          <td><span class="src-chip src-{{ rec.source or 'manual' }}">{{ (rec.source or 'manual')|title }}</span></td>
+          <td style="color:var(--text3);font-size:.82rem">{{ rec.notes or '—' }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('del_bp',id=rec.id) }}" onsubmit="return confirm('Delete this reading?')">
+              <button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" style="text-align:center;color:var(--text3);padding:36px;font-size:.9rem">No records yet. Add your first reading above.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const labels  = {{ labels|safe }};
+const sysData = {{ sys_data|safe }};
+const diaData = {{ dia_data|safe }};
+if (labels.length > 0) {
+  new Chart(document.getElementById('ch'), {
+    type:'line',
+    data:{
+      labels,
+      datasets:[
+        { label:'Systolic', data:sysData, borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,.08)', tension:.4, fill:true, pointRadius:5, pointBackgroundColor:'#dc2626', borderWidth:2.5 },
+        { label:'Diastolic', data:diaData, borderColor:'#2e4493', backgroundColor:'rgba(46,68,147,.08)', tension:.4, fill:true, pointRadius:5, pointBackgroundColor:'#2e4493', borderWidth:2.5 }
+      ]
+    },
+    options:{ responsive:true, maintainAspectRatio:true, plugins:{legend:{position:'top'}}, scales:{ x:{grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}}, y:{min:40,grid:{color:'#e5f3fa'},ticks:{color:'#64748b',font:{size:11}}} } }
+  });
+} else {
+  document.getElementById('ch').closest('.chart-wrap').innerHTML = '<div style="height:200px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.88rem;flex-direction:column;gap:9px"><i class="bi bi-graph-up" style="font-size:2rem;color:#b8dff2"></i>Add readings to see the trend chart.</div>';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block title %}{{ r.label }}{% endblock %}
+{% block page_title %}{{ r.icon }} {{ r.label }}{% endblock %}
+{% block extra_css %}
+<style>
+.det-grid{display:grid;grid-template-columns:1fr 370px;gap:20px;align-items:start}
+.file-frame{background:#0F172A;border-radius:18px;overflow:hidden;box-shadow:var(--sh-lg)}
+.file-frame iframe{width:100%;height:700px;border:none;display:block}
+.file-frame img{width:100%;display:block;object-fit:contain;max-height:800px}
+.vtbl{width:100%;border-collapse:collapse}
+.vtbl th{background:var(--bg);font-size:.64rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);padding:9px 13px;border-bottom:1.5px solid var(--border);text-align:left}
+.vtbl td{padding:10px 13px;border-bottom:1px solid var(--border2);font-size:.8rem;vertical-align:middle}
+.vtbl tr:last-child td{border-bottom:none}
+.vtbl tr.ab td{background:linear-gradient(90deg,rgba(250,82,82,.04),transparent)}
+.vname{font-weight:700;color:var(--text)}
+.vnum{font-size:1rem;font-weight:800;color:var(--indigo)}
+.vnum.hi{color:var(--red)}.vnum.lo{color:var(--purple)}
+.flag-item{background:var(--amber-lt);border-left:3px solid var(--amber);border-radius:0 9px 9px 0;padding:9px 13px;margin-bottom:7px;font-size:.78rem;color:#5D4A1A;line-height:1.6}
+.mrow{display:flex;padding:9px 16px;border-bottom:1px solid var(--border2);gap:10px}
+.mrow:last-child{border-bottom:none}
+.mlbl{font-size:.68rem;color:var(--text3);width:88px;flex-shrink:0;padding-top:2px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.mval{font-size:.8rem;font-weight:600;color:var(--text)}
+@media(max-width:1100px){.det-grid{grid-template-columns:1fr}}
+</style>
+{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+  <a href="{{ url_for('vault') }}" class="btn btn-o"><i class="bi bi-arrow-left"></i> Vault</a>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="{{ url_for('serve_file',rid=r.id) }}" target="_blank" class="btn btn-o"><i class="bi bi-arrows-fullscreen"></i> Full Screen</a>
+    <a href="{{ url_for('serve_file',rid=r.id) }}" download="{{ r.original_filename }}" class="btn btn-o"><i class="bi bi-download"></i> Download</a>
+    <button onclick="document.getElementById('reModal').style.display='flex'" class="btn btn-purple"><i class="bi bi-arrow-repeat"></i> Re-Extract</button>
+    <a href="{{ url_for('doctor_view') }}" class="btn btn-teal" target="_blank"><i class="bi bi-hospital"></i> Doctor View</a>
+    <form method="POST" action="{{ url_for('delete_report',rid=r.id) }}" onsubmit="return confirm('Delete this report permanently?')">
+      <button type="submit" class="btn btn-d"><i class="bi bi-trash3"></i> Delete</button>
+    </form>
+  </div>
+</div>
+
+<div class="det-grid">
+  <!-- File viewer -->
+  <div class="file-frame">
+    {% if r.file_type=='pdf' %}
+    <iframe src="{{ url_for('serve_file',rid=r.id) }}" title="{{ r.original_filename }}"></iframe>
+    {% else %}
+    <img src="{{ url_for('serve_file',rid=r.id) }}" alt="Lab Report">
+    {% endif %}
+  </div>
+
+  <!-- Right panel -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+
+    <!-- Report details -->
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="bi bi-clipboard2-pulse" style="color:var(--indigo)"></i> Report Details</h3>
+        {% if r.auto_saved %}<span style="background:var(--teal-lt);color:#0C7A56;border-radius:10px;padding:2px 9px;font-size:.66rem;font-weight:800"><i class="bi bi-check-circle-fill"></i> Auto-saved</span>{% endif %}
+      </div>
+      {% if r.lab_name %}    <div class="mrow"><div class="mlbl">Lab</div><div class="mval">{{ r.lab_name }}</div></div>{% endif %}
+      {% if r.patient_on_report %}<div class="mrow"><div class="mlbl">Patient</div><div class="mval">{{ r.patient_on_report }}</div></div>{% endif %}
+      {% if r.test_date %}   <div class="mrow"><div class="mlbl">Test Date</div><div class="mval">{{ r.test_date.strftime('%d %B %Y') }}</div></div>{% endif %}
+      {% if r.referring_doctor %}<div class="mrow"><div class="mlbl">Ref. Doctor</div><div class="mval">{{ r.referring_doctor }}</div></div>{% endif %}
+      {% if r.reg_id %}      <div class="mrow"><div class="mlbl">Reg. ID</div><div class="mval" style="font-family:monospace;font-size:.75rem">{{ r.reg_id }}</div></div>{% endif %}
+      <div class="mrow"><div class="mlbl">File</div><div class="mval" style="font-size:.73rem;word-break:break-all">{{ r.original_filename }}</div></div>
+      <div class="mrow"><div class="mlbl">Uploaded</div><div class="mval">{{ r.uploaded_at.strftime('%d %b %Y, %I:%M %p') }}</div></div>
+    </div>
+
+    <!-- Extracted values -->
+    {% set d=r.data %}
+    {% if d.get('values') %}
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="bi bi-bar-chart-steps" style="color:var(--indigo)"></i> Test Results</h3>
+        <span style="font-size:.7rem;color:var(--text3);font-weight:600">{{ (d.get('values') or {})|length }} results</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="vtbl">
+          <thead><tr><th>Test</th><th>Result</th><th>Unit</th><th>Normal Range</th></tr></thead>
+          <tbody>
+          {% set rvals = d.get('values') or {} %}
+          {% set runits = d.get('units') or {} %}
+          {% set rranges = d.get('reference_ranges') or {} %}
+          {% set rflags = d.get('abnormal_flags') or [] %}
+          {% for k,v in rvals.items() %}
+          {% if v is not none and v is not string and v!=true and v!=false %}
+          {% set u = runits.get(k, '') %}
+          {% set rng = rranges.get(k, '') %}
+          {% set isabn = false %}{% for f in rflags %}{% if k|upper in f|upper %}{% set isabn = true %}{% endif %}{% endfor %}
+          <tr class="{{ 'ab' if isabn }}">
+            <td>
+              <div class="vname">{{ k|replace('_',' ')|upper }}</div>
+              {% if isabn %}<div style="font-size:.62rem;color:var(--red);font-weight:800;margin-top:1px"><i class="bi bi-exclamation-triangle-fill"></i> ABNORMAL</div>{% endif %}
+            </td>
+            <td><span class="vnum {{ 'hi' if isabn }}">{{ v }}</span></td>
+            <td style="color:var(--text3);font-size:.74rem">{{ u or '—' }}</td>
+            <td style="color:var(--text3);font-size:.74rem">{{ rng or '—' }}</td>
+          </tr>{% endif %}{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% else %}
+    <div class="card" style="border:2px dashed var(--border)">
+      <div class="card-bd" style="text-align:center;padding:28px">
+        <i class="bi bi-exclamation-circle" style="font-size:2.5rem;color:var(--amber);display:block;margin-bottom:10px"></i>
+        <p style="font-weight:800;color:#7B5C00;font-size:.87rem;margin-bottom:5px">No values extracted yet</p>
+        <p style="font-size:.78rem;color:var(--text3);margin-bottom:14px">Run: <code style="background:var(--bg);padding:2px 6px;border-radius:4px">pip install pdfplumber Pillow --upgrade</code></p>
+        <button onclick="document.getElementById('reModal').style.display='flex'" class="btn btn-purple btn-sm"><i class="bi bi-arrow-repeat"></i> Re-Extract Now</button>
+      </div>
+    </div>{% endif %}
+
+    <!-- Abnormal flags -->
+    {% set rflags2 = d.get('abnormal_flags') or [] %}
+    {% if rflags2 %}
+    <div class="card">
+      <div class="card-hd">
+        <h3><i class="bi bi-exclamation-triangle" style="color:var(--amber)"></i> Abnormal Values</h3>
+        <span style="background:var(--amber-lt);color:#7B5C00;border-radius:20px;padding:2px 9px;font-size:.68rem;font-weight:800">{{ rflags2|length }} flag(s)</span>
+      </div>
+      <div class="card-bd">{% for f in rflags2 %}<div class="flag-item"><i class="bi bi-arrow-right-circle"></i> {{ f }}</div>{% endfor %}</div>
+    </div>{% endif %}
+
+    <!-- AI Summary -->
+    {% if r.ai_summary %}
+    <div class="card" style="overflow:hidden">
+      <div class="card-hd" style="background:linear-gradient(135deg,var(--indigo),var(--purple))">
+        <h3 style="color:#fff"><i class="bi bi-stars"></i> AI Summary</h3>
+      </div>
+      <div class="card-bd" style="background:var(--indigo-lt)">
+        <p style="font-size:.84rem;line-height:1.85;color:var(--text)">{{ r.ai_summary }}</p>
+        <p style="font-size:.67rem;color:var(--text3);margin-top:10px;font-style:italic"><i class="bi bi-info-circle"></i> Informational only. Always consult your doctor.</p>
+      </div>
+    </div>{% endif %}
+  </div>
+</div>
+
+<!-- Re-extract modal -->
+<div id="reModal" style="display:none;position:fixed;inset:0;background:rgba(15,18,46,.6);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px)">
+  <div style="background:#fff;border-radius:20px;padding:30px;width:430px;max-width:90vw;box-shadow:var(--sh-lg)">
+    <h3 style="margin-bottom:6px;font-size:1.05rem;font-weight:800"><i class="bi bi-arrow-repeat" style="color:var(--purple)"></i> Re-run AI Extraction</h3>
+    <div style="background:var(--amber-lt);border-radius:9px;padding:10px 13px;font-size:.77rem;color:#7B5C00;margin:14px 0">
+      <strong>First:</strong> run <code style="background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px">pip install google-generativeai Pillow pdfplumber --upgrade</code>
+    </div>
+    <form method="POST" action="{{ url_for('reextract',rid=r.id) }}">
+      <div class="fg"><label>Gemini API Key</label>
+      <input type="text" name="api_key" class="fc" placeholder="AIzaSy... (from aistudio.google.com)"></div>
+      <div style="display:flex;gap:9px;margin-top:12px">
+        <button type="submit" class="btn btn-purple"><i class="bi bi-stars"></i> Extract Now</button>
+        <button type="button" onclick="document.getElementById('reModal').style.display='none'" class="btn btn-o">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

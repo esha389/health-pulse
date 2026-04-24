@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Admin Panel — Health Pulse{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block content %}
+
+<div class="g4" style="margin-bottom:22px">
+  <div class="stat" style="border-top:3px solid var(--blue)">
+    <div class="ic-box" style="background:var(--sky-lt)"><i class="bi bi-people-fill" style="color:var(--blue);font-size:1.25rem"></i></div>
+    <div class="lbl">Total Users</div><div class="val" style="color:var(--blue)">{{ users|length }}</div>
+    <div class="sub">registered accounts</div>
+  </div>
+  <div class="stat" style="border-top:3px solid var(--ok)">
+    <div class="ic-box" style="background:var(--ok-lt)"><i class="bi bi-folder2-open" style="color:var(--ok);font-size:1.25rem"></i></div>
+    <div class="lbl">Lab Reports</div><div class="val" style="color:var(--ok)">{{ total_uploads }}</div>
+    <div class="sub">files uploaded</div>
+  </div>
+  <div class="stat" style="border-top:3px solid var(--warn)">
+    <div class="ic-box" style="background:var(--warn-lt)"><i class="bi bi-clipboard2-pulse-fill" style="color:var(--warn);font-size:1.25rem"></i></div>
+    <div class="lbl">Health Records</div><div class="val" style="color:var(--warn)">{{ total_records }}</div>
+    <div class="sub">across all modules</div>
+  </div>
+  <div class="stat" style="border-top:3px solid var(--purple)">
+    <div class="ic-box" style="background:var(--purple-lt)"><i class="bi bi-megaphone-fill" style="color:var(--purple);font-size:1.25rem"></i></div>
+    <div class="lbl">Updates Posted</div><div class="val" style="color:var(--purple)">{{ updates|length }}</div>
+    <div class="sub">changelog entries</div>
+  </div>
+</div>
+
+<div class="g2" style="align-items:start;gap:22px">
+  <div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-hd"><h3><i class="bi bi-megaphone-fill" style="color:var(--blue)"></i> Post App Update / Announcement</h3></div>
+      <div class="card-bd">
+        <form method="POST" action="{{ url_for('admin_post_update') }}">
+          <div class="g2">
+            <div class="fg"><label>Version (optional)</label><input type="text" name="version" class="fc" placeholder="e.g. 4.1"></div>
+            <div class="fg"><label>Type</label>
+              <select name="update_type" class="fc">
+                <option value="feature">✨ New Feature</option>
+                <option value="fix">🔧 Bug Fix</option>
+                <option value="announcement">📢 Announcement</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label>Title *</label><input type="text" name="title" class="fc" placeholder="e.g. Re-extract button added" required></div>
+          <div class="fg"><label>Details (optional)</label>
+            <textarea name="body" class="fc" rows="3" placeholder="More details about this update…" style="resize:vertical"></textarea></div>
+          <button type="submit" class="btn btn-p"><i class="bi bi-send-fill"></i> Post Update</button>
+        </form>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-hd"><h3><i class="bi bi-clock-history" style="color:var(--blue)"></i> Posted Updates</h3></div>
+      {% if updates %}{% for u in updates %}
+      <div style="display:flex;align-items:flex-start;gap:13px;padding:13px 22px;border-bottom:1px solid var(--border2)">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            {% if u.update_type=='feature' %}<span style="font-size:.63rem;background:var(--sky-lt);color:var(--blue);border-radius:6px;padding:2px 8px;font-weight:800">FEATURE</span>
+            {% elif u.update_type=='fix' %}<span style="font-size:.63rem;background:var(--danger-lt);color:var(--danger);border-radius:6px;padding:2px 8px;font-weight:800">FIX</span>
+            {% else %}<span style="font-size:.63rem;background:var(--purple-lt);color:var(--purple);border-radius:6px;padding:2px 8px;font-weight:800">NEWS</span>{% endif %}
+            {% if u.version %}<span style="font-size:.69rem;color:var(--text3)">v{{ u.version }}</span>{% endif %}
+          </div>
+          <div style="font-weight:700;font-size:.86rem;color:var(--text)">{{ u.title }}</div>
+          {% if u.body %}<div style="font-size:.78rem;color:var(--text3);margin-top:2px">{{ u.body[:100] }}</div>{% endif %}
+          <div style="font-size:.69rem;color:var(--text4);margin-top:3px">{{ u.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+        </div>
+        <form method="POST" action="{{ url_for('admin_delete_update',uid=u.id) }}">
+          <button type="submit" class="btn btn-d btn-sm" onclick="return confirm('Delete this update?')"><i class="bi bi-trash3"></i></button>
+        </form>
+      </div>{% endfor %}
+      {% else %}
+      <div style="padding:28px;text-align:center;color:var(--text3);font-size:.88rem">No updates posted yet.</div>{% endif %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><h3><i class="bi bi-people-fill" style="color:var(--blue)"></i> All Users</h3></div>
+    <div style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+      <tbody>{% for u in users %}<tr>
+        <td style="color:var(--text4)">{{ u.id }}</td>
+        <td><div style="font-weight:700;font-size:.88rem;color:var(--text)">{{ u.name }}</div></td>
+        <td style="font-size:.82rem;color:var(--text2)">{{ u.email }}</td>
+        <td>{% if u.is_admin %}<span style="background:var(--sky-lt);color:var(--blue);border-radius:10px;padding:3px 9px;font-size:.69rem;font-weight:800">&#9733; Admin</span>
+          {% else %}<span style="background:#f1f5f9;color:var(--text3);border-radius:10px;padding:3px 9px;font-size:.69rem;font-weight:700">User</span>{% endif %}
+        </td>
+        <td style="font-size:.8rem;color:var(--text3)">{{ u.created_at.strftime('%d %b %Y') }}</td>
+        <td>
+          <div style="display:flex;gap:7px">
+            {% if u.id != current_user.id %}
+            <form method="POST" action="{{ url_for('toggle_admin',uid=u.id) }}">
+              <button type="submit" class="btn btn-o btn-sm" title="{{ 'Remove Admin' if u.is_admin else 'Make Admin' }}">{{ '→ User' if u.is_admin else '→ Admin' }}</button>
+            </form>
+            <form method="POST" action="{{ url_for('admin_delete_user',uid=u.id) }}" onsubmit="return confirm('Delete user and all their data?')">
+              <button type="submit" class="btn btn-d btn-sm"><i class="bi bi-trash3"></i></button>
+            </form>
+            {% else %}<span style="font-size:.76rem;color:var(--text3);padding:5px 8px">You</span>{% endif %}
+          </div>
+        </td>
+      </tr>{% endfor %}</tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}
